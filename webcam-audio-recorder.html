@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Webcam Audio Recorder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        #videoElement {
+            width: 100%;
+            max-width: 640px;
+            margin: 20px 0;
+        }
+        .button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        .button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #timer {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Webcam Audio Recorder</h1>
+    <video id="videoElement" autoplay muted></video>
+    <div id="timer">00:00</div>
+    <div>
+        <button id="startButton" class="button">Start Recording</button>
+        <button id="stopButton" class="button" disabled>Stop Recording</button>
+        <button id="downloadButton" class="button" disabled>Download Audio</button>
+    </div>
+
+    <script>
+        let mediaRecorder;
+        let recordedChunks = [];
+        let startTime;
+        let timerInterval;
+
+        const videoElement = document.getElementById('videoElement');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const downloadButton = document.getElementById('downloadButton');
+        const timerDisplay = document.getElementById('timer');
+
+        // Update timer display
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toString().padStart(2, '0');
+            timerDisplay.textContent = `${minutes}:${seconds}`;
+        }
+
+        // Start recording
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: true
+                });
+
+                videoElement.srcObject = stream;
+                
+                // Create MediaRecorder for audio track only
+                const audioStream = new MediaStream(stream.getAudioTracks());
+                mediaRecorder = new MediaRecorder(audioStream);
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.start();
+                startTime = Date.now();
+                timerInterval = setInterval(updateTimer, 1000);
+
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                downloadButton.disabled = true;
+
+            } catch (err) {
+                console.error("Error accessing media devices:", err);
+                alert("Could not access camera or microphone. Please ensure you have granted the necessary permissions.");
+            }
+        }
+
+        // Stop recording
+        function stopRecording() {
+            const stream = videoElement.srcObject;
+            const tracks = stream.getTracks();
+
+            tracks.forEach(track => track.stop());
+            mediaRecorder.stop();
+
+            clearInterval(timerInterval);
+            startButton.disabled = false;
+            stopButton.disabled = true;
+            downloadButton.disabled = false;
+        }
+
+        // Download recorded audio
+        function downloadRecording() {
+            const blob = new Blob(recordedChunks, {
+                type: 'audio/webm'
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            document.body.appendChild(a);
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'recorded-audio.webm';
+            a.click();
+            window.URL.revokeObjectURL(url);
+            recordedChunks = [];
+            downloadButton.disabled = true;
+        }
+
+        // Event listeners
+        startButton.addEventListener('click', startRecording);
+        stopButton.addEventListener('click', stopRecording);
+        downloadButton.addEventListener('click', downloadRecording);
+    </script>
+</body>
+</html>

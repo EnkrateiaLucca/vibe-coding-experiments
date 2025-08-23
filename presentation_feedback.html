@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presentation Feedback Timer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
+        .timer-setup {
+            margin-bottom: 2rem;
+        }
+
+        .time-inputs {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .time-input {
+            text-align: center;
+        }
+
+        .time-input label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .time-input input {
+            width: 80px;
+            padding: 0.5rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2rem;
+            transition: border-color 0.3s;
+        }
+
+        .time-input input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .timer-display {
+            font-size: 4rem;
+            text-align: center;
+            margin: 2rem 0;
+            font-weight: 300;
+            color: #667eea;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        button {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .start-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .start-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .stop-btn {
+            background: #f56565;
+            color: white;
+        }
+
+        .stop-btn:hover {
+            background: #e53e3e;
+            transform: translateY(-2px);
+        }
+
+        .reset-btn {
+            background: #48bb78;
+            color: white;
+        }
+
+        .reset-btn:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+
+        .recording-indicator {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: #f56565;
+            font-weight: 500;
+        }
+
+        .recording-indicator.active {
+            display: flex;
+        }
+
+        .pulse {
+            width: 12px;
+            height: 12px;
+            background: #f56565;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .feedback-section {
+            display: none;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f7fafc;
+            border-radius: 15px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .feedback-section.active {
+            display: block;
+        }
+
+        .feedback-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .feedback-score {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .feedback-title {
+            font-size: 1.2rem;
+            color: #2d3748;
+        }
+
+        .feedback-content {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .feedback-content h3 {
+            color: #2d3748;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feedback-content ul {
+            padding-left: 1.5rem;
+        }
+
+        .feedback-content li {
+            margin-bottom: 0.25rem;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-style: italic;
+        }
+
+        .error {
+            color: #f56565;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Presentation Feedback Timer</h1>
+        
+        <div class="timer-setup">
+            <div class="time-inputs">
+                <div class="time-input">
+                    <label for="minutes">Minutes</label>
+                    <input type="number" id="minutes" min="0" max="59" value="5">
+                </div>
+                <div class="time-input">
+                    <label for="seconds">Seconds</label>
+                    <input type="number" id="seconds" min="0" max="59" value="0">
+                </div>
+            </div>
+        </div>
+
+        <div class="timer-display" id="timerDisplay">05:00</div>
+
+        <div class="recording-indicator" id="recordingIndicator">
+            <div class="pulse"></div>
+            <span>Recording your presentation...</span>
+        </div>
+
+        <div class="controls">
+            <button class="start-btn" id="startBtn">Start Presentation</button>
+            <button class="stop-btn" id="stopBtn" style="display: none;">Stop</button>
+            <button class="reset-btn" id="resetBtn">Reset</button>
+        </div>
+
+        <div class="feedback-section" id="feedbackSection">
+            <div class="loading" id="loadingFeedback">Analyzing your presentation...</div>
+            <div id="feedbackContent" style="display: none;">
+                <div class="feedback-header">
+                    <div class="feedback-score" id="feedbackScore"></div>
+                    <div class="feedback-title">Presentation Feedback</div>
+                </div>
+                <div class="feedback-content" id="feedbackText"></div>
+            </div>
+        </div>
+
+        <div class="error" id="errorMessage"></div>
+    </div>
+
+    <script>
+        let minutes = 5;
+        let seconds = 0;
+        let totalSeconds = 0;
+        let interval = null;
+        let isRunning = false;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recognition = null;
+        let transcript = '';
+        let interimTranscript = '';
+
+        const minutesInput = document.getElementById('minutes');
+        const secondsInput = document.getElementById('seconds');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const recordingIndicator = document.getElementById('recordingIndicator');
+        const feedbackSection = document.getElementById('feedbackSection');
+        const loadingFeedback = document.getElementById('loadingFeedback');
+        const feedbackContent = document.getElementById('feedbackContent');
+        const feedbackScore = document.getElementById('feedbackScore');
+        const feedbackText = document.getElementById('feedbackText');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Initialize speech recognition
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = (event) => {
+                interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const result = event.results[i];
+                    if (result.isFinal) {
+                        transcript += result[0].transcript + ' ';
+                    } else {
+                        interimTranscript += result[0].transcript;
+                    }
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                if (event.error === 'no-speech') {
+                    // Continue recording even if no speech detected
+                    return;
+                }
+                errorMessage.textContent = 'Speech recognition error: ' + event.error;
+            };
+        }
+
+        function updateDisplay() {
+            const displayMinutes = Math.floor(totalSeconds / 60);
+            const displaySeconds = totalSeconds % 60;
+            timerDisplay.textContent = 
+                `${displayMinutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')}`;
+        }
+
+        function startTimer() {
+            if (isRunning) return;
+
+            minutes = parseInt(minutesInput.value) || 0;
+            seconds = parseInt(secondsInput.value) || 0;
+            totalSeconds = minutes * 60 + seconds;
+
+            if (totalSeconds === 0) {
+                errorMessage.textContent = 'Please set a timer duration';
+                return;
+            }
+
+            errorMessage.textContent = '';
+            isRunning = true;
+            transcript = '';
+            interimTranscript = '';
+            
+            startBtn.style.display = 'none';
+            stopBtn.style.display = 'inline-block';
+            minutesInput.disabled = true;
+            secondsInput.disabled = true;
+            recordingIndicator.classList.add('active');
+            feedbackSection.classList.remove('active');
+
+            // Start speech recognition
+            if (recognition) {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    console.error('Recognition already started');
+                }
+            }
+
+            interval = setInterval(() => {
+                if (totalSeconds > 0) {
+                    totalSeconds--;
+                    updateDisplay();
+                } else {
+                    stopTimer();
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (!isRunning) return;
+
+            isRunning = false;
+            clearInterval(interval);
+            
+            startBtn.style.display = 'inline-block';
+            stopBtn.style.display = 'none';
+            minutesInput.disabled = false;
+            secondsInput.disabled = false;
+            recordingIndicator.classList.remove('active');
+
+            // Stop speech recognition
+            if (recognition) {
+                recognition.stop();
+            }
+
+            // Combine final transcript
+            const finalTranscript = transcript + interimTranscript;
+
+            if (finalTranscript.trim()) {
+                analyzePresentaion(finalTranscript);
+            } else {
+                errorMessage.textContent = 'No speech detected. Please try again and speak clearly.';
+            }
+        }
+
+        function resetTimer() {
+            stopTimer();
+            minutes = parseInt(minutesInput.value) || 5;
+            seconds = parseInt(secondsInput.value) || 0;
+            totalSeconds = minutes * 60 + seconds;
+            updateDisplay();
+            feedbackSection.classList.remove('active');
+            errorMessage.textContent = '';
+        }
+
+        async function analyzePresentaion(transcriptText) {
+            feedbackSection.classList.add('active');
+            loadingFeedback.style.display = 'block';
+            feedbackContent.style.display = 'none';
+
+            // Simulate Claude API call with mock feedback
+            // In a real implementation, you would send the transcript to your backend
+            // which would then call the Claude API
+            setTimeout(() => {
+                const mockFeedback = generateMockFeedback(transcriptText);
+                displayFeedback(mockFeedback);
+            }, 2000);
+        }
+
+        function generateMockFeedback(transcript) {
+            const wordCount = transcript.split(' ').filter(word => word.length > 0).length;
+            const duration = (parseInt(minutesInput.value) * 60 + parseInt(secondsInput.value));
+            const wordsPerMinute = Math.round((wordCount / duration) * 60);
+            
+            // Generate a score based on various factors
+            let score = 85;
+            if (wordsPerMinute < 100) score -= 10;
+            if (wordsPerMinute > 180) score -= 5;
+            if (wordCount < 50) score -= 15;
+            
+            score = Math.max(0, Math.min(100, score));
+
+            return {
+                score: score,
+                feedback: `
+                    <h3>Overall Performance: ${score >= 80 ? 'Excellent' : score >= 60 ? 'Good' : 'Needs Improvement'}</h3>
+                    <p>You spoke for ${duration} seconds with approximately ${wordCount} words.</p>
+                    
+                    <h3>Speaking Pace</h3>
+                    <p>Your pace was ${wordsPerMinute} words per minute. ${
+                        wordsPerMinute < 100 ? 'Consider speaking a bit faster for better engagement.' :
+                        wordsPerMinute > 180 ? 'Try to slow down slightly to ensure clarity.' :
+                        'This is a good pace for most audiences.'
+                    }</p>
+                    
+                    <h3>Key Strengths</h3>
+                    <ul>
+                        <li>Completed the full presentation time</li>
+                        <li>Clear speech detected throughout</li>
+                        ${wordCount > 100 ? '<li>Good amount of content delivered</li>' : ''}
+                    </ul>
+                    
+                    <h3>Areas for Improvement</h3>
+                    <ul>
+                        ${wordsPerMinute < 100 ? '<li>Increase speaking pace for better energy</li>' : ''}
+                        ${wordsPerMinute > 180 ? '<li>Slow down to improve clarity</li>' : ''}
+                        ${wordCount < 50 ? '<li>Add more content to your presentation</li>' : ''}
+                        <li>Practice transitions between topics</li>
+                    </ul>
+                    
+                    <p><em>Note: In a real implementation, Claude would provide detailed feedback on content quality, structure, and delivery.</em></p>
+                `
+            };
+        }
+
+        function displayFeedback(feedback) {
+            loadingFeedback.style.display = 'none';
+            feedbackContent.style.display = 'block';
+            feedbackScore.textContent = feedback.score + '/100';
+            feedbackText.innerHTML = feedback.feedback;
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', startTimer);
+        stopBtn.addEventListener('click', stopTimer);
+        resetBtn.addEventListener('click', resetTimer);
+
+        minutesInput.addEventListener('input', () => {
+            if (!isRunning) {
+                minutes = parseInt(minutesInput.value) || 0;
+                totalSeconds = minutes * 60 + (parseInt(secondsInput.value) || 0);
+                updateDisplay();
+            }
+        });
+
+        secondsInput.addEventListener('input', () => {
+            if (!isRunning) {
+                seconds = parseInt(secondsInput.value) || 0;
+                totalSeconds = (parseInt(minutesInput.value) || 0) * 60 + seconds;
+                updateDisplay();
+            }
+        });
+
+        // Initialize display
+        updateDisplay();
+    </script>
+</body>
+</html>

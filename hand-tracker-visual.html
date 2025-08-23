@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hand Tracking with Three.js Interactive Demo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #000;
+      font-family: Arial, sans-serif;
+    }
+    #video-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    #webcam {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1); /* Mirror the video */
+    }
+    #canvas {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      transform: scaleX(-1); /* Mirror the canvas too */
+    }
+    #threejs-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none; /* Allow clicks to pass through */
+    }
+    .controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      text-align: center;
+    }
+    .button {
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+    .button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 24px;
+      text-align: center;
+    }
+    .instructions {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      background-color: rgba(0,0,0,0.5);
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-align: center;
+      z-index: 100;
+      max-width: 80%;
+    }
+  </style>
+</head>
+<body>
+  <div id="video-container">
+    <video id="webcam" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+    <div id="threejs-container"></div>
+    <div class="loading">Loading Three.js scene...</div>
+    <div class="instructions" style="display: none;">
+      Right hand: Control sphere size with thumb-index distance<br>
+      Left hand: Touch sphere with index finger to change color
+    </div>
+  </div>
+  
+  <div class="controls">
+    <button id="startButton" class="button">Start Camera</button>
+  </div>
+
+  <!-- Load dependencies first -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.155.0/three.min.js"></script>
+
+  <script>
+    // ThreeJS variables
+    let scene, camera, renderer, sphere, wireframe;
+    let initialScale, sphereScreenPosition;
+    let lastColorChange = 0;
+    const COLOR_CHANGE_COOLDOWN = 500; // ms
+    let targetScale = 1.0; // For smoothing sphere scale
+    const SMOOTHING_FACTOR = 0.15; // Lower is smoother
+    
+    // DOM elements
+    const videoElement = document.getElementById('webcam');
+    const canvasElement = document.getElementById('canvas');
+    const canvasCtx = canvasElement.getContext('2d');
+    const loadingElement = document.querySelector('.loading');
+    const startButton = document.getElementById('startButton');
+    const threejsContainer = document.getElementById('threejs-container');
+    const instructions = document.querySelector('.instructions');
+    
+    // MediaPipe variables
+    let hands;
+    
+    // Initialize ThreeJS scene
+    initThreeJS();
+
+    // Set up event listeners
+    startButton.addEventListener('click', startCamera);
+    
+    // Function to initialize ThreeJS
+    function initThreeJS() {
+      // Create scene
+      scene = new THREE.Scene();
+      
+      // Create camera
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 5;
+      
+      // Create renderer with transparent background
+      renderer = new THREE.WebGLRenderer({ 
+        antialias: true,
+        alpha: true
+      });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setClearColor(0x000000, 0); // Transparent background
+      threejsContainer.appendChild(renderer.domElement);
+      
+      // Create sphere with neon fill
+      const sphereGeometry = new THREE.SphereGeometry(1.5, 32, 32);
+      const sphereMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0x00ff99,
+        transparent: true,
+        opacity: 0.7
+      });
+      sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+      scene.add(sphere);
+      
+      // Add wireframe
+      const wireframeGeometry = new THREE.WireframeGeometry(sphereGeometry);
+      const wireframeMaterial = new THREE.LineBasicMaterial({ 
+        color: 0xffffff,
+        linewidth: 1
+      });
+      wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
+      scene.add(wireframe);
+      
+      // Store initial scale
+      initialScale = {
+        x: sphere.scale.x,
+        y: sphere.scale.y,
+        z: sphere.scale.z
+      };
+      
+      // Create vector for tracking sphere position
+      sphereScreenPosition = new THREE.Vector3();
+      
+      // Handle window resize
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+      
+      // Start animation loop
+      animate();
+      
+      // Update loading message
+      loadingElement.textContent = "Click 'Start Camera' to begin";
+    }
+    
+    // Animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      // Smoothly interpolate sphere scale
+      if (sphere && typeof targetScale === 'number') {
+        const current = sphere.scale.x;
+        const next = current + (targetScale - current) * SMOOTHING_FACTOR;
+        sphere.scale.set(next, next, next);
+        wireframe.scale.set(next, next, next);
+      }
+      
+      // Rotate sphere
+      sphere.rotation.x += 0.005;
+      sphere.rotation.y += 0.01;
+      
+      // Match wireframe rotation
+      wireframe.rotation.x = sphere.rotation.x;
+      wireframe.rotation.y = sphere.rotation.y;
+      
+      // Update sphere screen position
+      sphereScreenPosition.setFromMatrixPosition(sphere.matrixWorld);
+      sphereScreenPosition.project(camera);
+      
+      // Render scene
+      renderer.render(scene, camera);
+    }
+    
+    // Start camera and hand tracking
+    async function startCamera() {
+      loadingElement.textContent = "Requesting camera access...";
+      
+      try {
+        // Request camera and microphone access (including audio helps trigger permissions dialog)
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false  // We don't need audio but this helps trigger permissions in some browsers
+        });
+        
+        // Set video source
+        videoElement.srcObject = stream;
+        
+        // Hide button once we have permission
+        startButton.style.display = 'none';
+        
+        // Initialize hand tracking when video is ready
+        videoElement.onloadedmetadata = () => {
+          videoElement.play();
+          initHandTracking();
+          loadingElement.textContent = "Starting hand tracking...";
+        };
+      } catch (error) {
+        console.error("Error accessing media devices:", error);
+        loadingElement.textContent = "Camera access denied. Please reload and try again.";
+      }
+    }
+    
+    // Initialize MediaPipe Hand tracking
+    function initHandTracking() {
+      // Create Hands object
+      hands = new Hands({
+        locateFile: (file) => {
+          return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+        }
+      });
+      
+      // Configure hand tracking
+      hands.setOptions({
+        maxNumHands: 2,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5
+      });
+      
+      // Set up result handling
+      hands.onResults(onHandResults);
+      
+      // Start camera processing
+      const camera = new Camera(videoElement, {
+        onFrame: async () => {
+          await hands.send({image: videoElement});
+        },
+        width: 1280,
+        height: 720
+      });
+      
+      camera.start()
+        .then(() => {
+          // Show instructions when everything is ready
+          loadingElement.style.display = 'none';
+          instructions.style.display = 'block';
+        })
+        .catch(err => {
+          console.error("Error starting camera:", err);
+          loadingElement.textContent = "Error initializing hand tracking. Please reload and try again.";
+        });
+    }
+    
+    // Process hand tracking results
+    function onHandResults(results) {
+      // Update canvas size to match video
+      canvasElement.width = videoElement.videoWidth;
+      canvasElement.height = videoElement.videoHeight;
+      
+      // Clear canvas
+      canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+      
+      // Process detected hands
+      if (results.multiHandLandmarks && results.multiHandedness) {
+        for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+          const landmarks = results.multiHandLandmarks[i];
+          const handedness = results.multiHandedness[i].label; // "Left" or "Right"
+          
+          // Draw hand landmarks
+          drawLandmarks(canvasCtx, landmarks);
+          drawConnectors(canvasCtx, landmarks);
+          
+          // Right hand controls sphere size
+          if (handedness === "Right") {
+            const thumbTip = landmarks[4];
+            const indexTip = landmarks[8];
+            const distance = calculateDistance(thumbTip, indexTip);
+            
+            // Map distance to scale (with limits)
+            const minDist = 0.05;
+            const maxDist = 0.3;
+            const minScale = 0.5;
+            const maxScale = 2.0;
+            
+            let scaleValue = (distance - minDist) / (maxDist - minDist);
+            scaleValue = Math.max(minScale, Math.min(maxScale, minScale + scaleValue * (maxScale - minScale)));
+            
+            // Set target scale for smoothing
+            targetScale = scaleValue;
+          }
+          
+          // Left hand changes color on touch
+          if (handedness === "Left") {
+            const indexTip = landmarks[8];
+            
+            // Convert to screen coordinates
+            const indexScreenX = (indexTip.x * 2) - 1;
+            const indexScreenY = -((indexTip.y * 2) - 1);
+            
+            // Check for collision with sphere
+            const distance = Math.sqrt(
+              Math.pow(indexScreenX - sphereScreenPosition.x, 2) + 
+              Math.pow(indexScreenY - sphereScreenPosition.y, 2)
+            );
+            
+            // Change color if touching and cooldown elapsed
+            const now = Date.now();
+            if (distance < 0.3 * sphere.scale.x && now - lastColorChange > COLOR_CHANGE_COOLDOWN) {
+              sphere.material.color.setHex(getRandomNeonColor());
+              lastColorChange = now;
+            }
+          }
+        }
+      }
+    }
+    
+    // Helper function to draw landmarks
+    function drawLandmarks(ctx, landmarks) {
+      for (const landmark of landmarks) {
+        const x = landmark.x * canvasElement.width;
+        const y = landmark.y * canvasElement.height;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, 2 * Math.PI);
+        ctx.fillStyle = '#00FF00';
+        ctx.fill();
+      }
+    }
+    
+    // Helper function to draw connectors
+    function drawConnectors(ctx, landmarks) {
+      // Define connections between hand landmarks
+      const connections = [
+        // Thumb
+        [0, 1], [1, 2], [2, 3], [3, 4],
+        // Index finger
+        [0, 5], [5, 6], [6, 7], [7, 8],
+        // Middle finger
+        [0, 9], [9, 10], [10, 11], [11, 12],
+        // Ring finger
+        [0, 13], [13, 14], [14, 15], [15, 16],
+        // Pinky
+        [0, 17], [17, 18], [18, 19], [19, 20],
+        // Palm
+        [0, 5], [5, 9], [9, 13], [13, 17]
+      ];
+      
+      ctx.strokeStyle = '#00FF00';
+      ctx.lineWidth = 2;
+      
+      for (const [i, j] of connections) {
+        const start = landmarks[i];
+        const end = landmarks[j];
+        
+        ctx.beginPath();
+        ctx.moveTo(start.x * canvasElement.width, start.y * canvasElement.height);
+        ctx.lineTo(end.x * canvasElement.width, end.y * canvasElement.height);
+        ctx.stroke();
+      }
+    }
+    
+    // Calculate distance between landmarks
+    function calculateDistance(point1, point2) {
+      return Math.sqrt(
+        Math.pow(point1.x - point2.x, 2) + 
+        Math.pow(point1.y - point2.y, 2) + 
+        Math.pow(point1.z - point2.z, 2)
+      );
+    }
+    
+    // Get random neon color
+    function getRandomNeonColor() {
+      const neonColors = [
+        0x00ff99, // cyan
+        0xff00ff, // magenta
+        0xff3366, // hot pink
+        0x14f7ff, // bright blue
+        0xffff00, // yellow
+        0xffa500, // orange
+        0x39ff14, // lime green
+        0xff5500  // neon red
+      ];
+      return neonColors[Math.floor(Math.random() * neonColors.length)];
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image with Draggable Boxes</title>
+    <style>
+        #canvas {
+            border: 1px solid #000;
+            cursor: crosshair;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <input type="file" id="imageInput" accept="image/*">
+        <button id="addBox">Add Box</button>
+        <button id="export">Export Image</button>
+    </div>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let boxes = [];
+        let isDragging = false;
+        let isResizing = false;
+        let currentBox = null;
+        let startX, startY;
+        let originalImage = null;
+
+        // Handle image upload
+        document.getElementById('imageInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = (event) => {
+                originalImage = new Image();
+                originalImage.onload = () => {
+                    canvas.width = originalImage.width;
+                    canvas.height = originalImage.height;
+                    drawCanvas();
+                };
+                originalImage.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Add new box
+        document.getElementById('addBox').addEventListener('click', () => {
+            boxes.push({
+                x: 50,
+                y: 50,
+                width: 100,
+                height: 100
+            });
+            drawCanvas();
+        });
+
+        // Export final image
+        document.getElementById('export').addEventListener('click', () => {
+            const dataUrl = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = 'export.png';
+            link.href = dataUrl;
+            link.click();
+        });
+
+        // Mouse event handlers
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            boxes.forEach(box => {
+                if (isInResizeZone(x, y, box)) {
+                    isResizing = true;
+                    currentBox = box;
+                } else if (isInBox(x, y, box)) {
+                    isDragging = true;
+                    currentBox = box;
+                }
+            });
+
+            startX = x;
+            startY = y;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            if (isDragging && currentBox) {
+                currentBox.x += x - startX;
+                currentBox.y += y - startY;
+                startX = x;
+                startY = y;
+                drawCanvas();
+            } else if (isResizing && currentBox) {
+                currentBox.width += x - startX;
+                currentBox.height += y - startY;
+                startX = x;
+                startY = y;
+                drawCanvas();
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+            isResizing = false;
+            currentBox = null;
+        });
+
+        function isInBox(x, y, box) {
+            return x >= box.x && x <= box.x + box.width &&
+                   y >= box.y && y <= box.y + box.height;
+        }
+
+        function isInResizeZone(x, y, box) {
+            const resizeHandleSize = 8;
+            return x >= box.x + box.width - resizeHandleSize &&
+                   x <= box.x + box.width + resizeHandleSize &&
+                   y >= box.y + box.height - resizeHandleSize &&
+                   y <= box.y + box.height + resizeHandleSize;
+        }
+
+        function drawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw image
+            if (originalImage) {
+                ctx.drawImage(originalImage, 0, 0);
+            }
+
+            // Draw boxes
+            boxes.forEach(box => {
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(box.x, box.y, box.width, box.height);
+                
+                // Draw resize handle
+                ctx.fillStyle = 'red';
+                ctx.fillRect(box.x + box.width - 4, box.y + box.height - 4, 8, 8);
+            });
+        }
+    </script>
+</body>
+</html>

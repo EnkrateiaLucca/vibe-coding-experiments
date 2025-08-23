@@ -1,0 +1,419 @@
+<!-- original source chat with gemini: https://g.co/gemini/share/5733c7621b83 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cubes Inside Cubes - p5.js</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; } /* Use Inter font */
+        #controls-sidebar input[type="color"] {
+            width: 100%;
+            height: 30px;
+            border: 1px solid #4A5568; /* gray-700 */
+            border-radius: 0.375rem; /* rounded-md */
+            padding: 2px;
+        }
+        #controls-sidebar input[type="range"] {
+            width: 100%;
+        }
+        #controls-sidebar label {
+            display: block;
+            margin-bottom: 0.25rem; /* mb-1 */
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500; /* font-medium */
+        }
+         /* Style for p5.js created sliders to look better with Tailwind */
+        input[type=range].p5Slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #4A5568; /* Tailwind gray-600 */
+            outline: none;
+            opacity: 0.9;
+            -webkit-transition: .2s;
+            transition: opacity .2s;
+            border-radius: 4px;
+        }
+        input[type=range].p5Slider:hover {
+            opacity: 1;
+        }
+        input[type=range].p5Slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #6366F1; /* Tailwind indigo-500 */
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #E0E7FF; /* Tailwind indigo-100 */
+        }
+        input[type=range].p5Slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #6366F1; /* Tailwind indigo-500 */
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #E0E7FF; /* Tailwind indigo-100 */
+        }
+        .control-group {
+            padding: 0.75rem; /* p-3 */
+            background-color: #2D3748; /* gray-800 */
+            border-radius: 0.5rem; /* rounded-lg */
+            margin-bottom: 1rem; /* mb-4 */
+        }
+        .control-group h3 {
+            font-size: 1rem; /* text-base */
+            font-weight: 600; /* font-semibold */
+            margin-bottom: 0.75rem; /* mb-3 */
+            color: #A0AEC0; /* gray-400 */
+            border-bottom: 1px solid #4A5568; /* gray-700 */
+            padding-bottom: 0.5rem; /* pb-2 */
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 flex h-screen">
+
+    <div id="controls-sidebar" class="w-72 md:w-80 lg:w-96 p-4 space-y-2 overflow-y-auto bg-gray-800 shadow-xl h-full">
+        <h2 class="text-xl font-bold mb-4 text-indigo-400">Controls</h2>
+        
+        <div id="fps-display" class="text-sm mb-3 p-2 bg-gray-700 rounded-md">FPS: ...</div>
+
+        <div class="control-group">
+            <h3>General</h3>
+            <div id="particles-control"></div>
+            <div id="cam-rotate-control"></div>
+        </div>
+
+        <div class="control-group">
+            <h3>Glowing Cubes</h3>
+            <div id="glowing-cubes-grid-toggle-control"></div>
+            <div id="glowing-cubes-density-control"></div>
+            <div id="glowing-cubes-color-control"></div>
+            <div id="glowing-cubes-thickness-control"></div>
+            <div id="glowing-cubes-size-control"></div>
+        </div>
+        
+        <div class="control-group">
+            <h3>Trail System (Tier 1)</h3>
+            <div id="trail-head-size-control"></div>
+            <div id="trail-head-chance-control"></div>
+            <div id="trail-speed-control"></div>
+            <div id="trail-length-control"></div>
+            <div id="trail-thickness-control"></div>
+            <div id="trail-color-control"></div>
+            <div id="max-trails-control"></div>
+        </div>
+
+    </div>
+
+    <div id="canvas-container" class="flex-grow h-full">
+        </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.dom.min.js"></script>
+
+    <script>
+        // p5.js sketch
+        let canvas;
+
+        // UI Elements
+        let particlesSlider, camRotateSlider;
+        let glowingCubesGridCheckbox, glowingCubesDensitySlider, glowingCubesColorPicker, glowingCubesThicknessSlider, glowingCubesSizeSlider;
+        let trailHeadSizeSlider, trailHeadChanceSlider, trailSpeedSlider, trailLengthSlider, trailThicknessSlider, trailColorPicker, maxTrailsSlider;
+
+        // Values from UI
+        let numParticles = 150;
+        let camRotationSpeed = 0.002;
+        let showGlowingCubesGrid = true;
+        let glowingCubeDensity = 2;
+        let glowingCubeColor = '#00FF00';
+        let glowingCubeThickness = 1.0;
+        let glowingCubeSize = 25;
+
+        let trailHeadSize = 8;
+        let trailHeadSpawnChance = 0.05; // Lowered from 0.14 for performance
+        let trailSpeed = 2; // Units per frame
+        let trailLength = 150; // Max history points
+        let trailThickness = 1.5;
+        let trailColor = '#FF5733';
+        let maxTrailHeads = 50; // Max number of trail heads
+
+        // Particle & Trail Systems
+        let particles = [];
+        let trailHeads = [];
+        const GRID_CELL_SIZE = 100; // For trail movement logic
+        const WORLD_BOUNDS = 400; // Trails and particles move within this cubic area
+
+        // Helper to create a slider with a label and value display
+        function createSliderWithLabel(label, minVal, maxVal, initialVal, step, parentId, updateVarCallback) {
+            let container = createDiv().parent(parentId).addClass('mb-3');
+            createSpan(label + ': ').parent(container);
+            let valueSpan = createSpan(initialVal.toString()).parent(container);
+            let slider = createSlider(minVal, maxVal, initialVal, step).parent(container).addClass('p5Slider');
+            slider.input(() => {
+                updateVarCallback(slider.value());
+                valueSpan.html(slider.value());
+            });
+            return slider;
+        }
+        
+        // Helper to create a color picker with a label
+        function createColorPickerWithLabel(label, initialColor, parentId, updateVarCallback) {
+            let container = createDiv().parent(parentId).addClass('mb-3');
+            createSpan(label + ': ').parent(container);
+            let picker = createColorPicker(initialColor).parent(container);
+            picker.input(() => {
+                updateVarCallback(picker.value());
+            });
+            return picker;
+        }
+
+        // Helper to create a checkbox with a label
+        function createCheckboxWithLabel(label, initialChecked, parentId, updateVarCallback) {
+            let container = createDiv().parent(parentId).addClass('mb-3 flex items-center');
+            let checkbox = createCheckbox('', initialChecked).parent(container);
+            checkbox.changed(() => {
+                updateVarCallback(checkbox.checked());
+            });
+            createSpan(label).parent(container).addClass('ml-2');
+            return checkbox;
+        }
+
+
+        function setup() {
+            let canvasContainer = select('#canvas-container');
+            canvas = createCanvas(canvasContainer.width, canvasContainer.height, WEBGL);
+            canvas.parent(canvasContainer);
+            
+            // Set up camera perspective
+            perspective(PI / 3.0, width / height, 0.1, WORLD_BOUNDS * 5);
+
+            // Initialize UI controls
+            // General
+            particlesSlider = createSliderWithLabel('Particles', 0, 500, numParticles, 1, 'particles-control', val => numParticles = val);
+            camRotateSlider = createSliderWithLabel('Cam Rotate Speed', 0, 0.01, camRotationSpeed, 0.0001, 'cam-rotate-control', val => camRotationSpeed = val);
+
+            // Glowing Cubes
+            glowingCubesGridCheckbox = createCheckboxWithLabel('Show Grid', showGlowingCubesGrid, 'glowing-cubes-grid-toggle-control', val => showGlowingCubesGrid = val);
+            glowingCubesDensitySlider = createSliderWithLabel('Grid Density', 1, 5, glowingCubeDensity, 1, 'glowing-cubes-density-control', val => glowingCubeDensity = val);
+            glowingCubesColorPicker = createColorPickerWithLabel('Cube Color', glowingCubeColor, 'glowing-cubes-color-control', val => glowingCubeColor = val);
+            glowingCubesThicknessSlider = createSliderWithLabel('Cube Thickness', 0.1, 5, glowingCubeThickness, 0.1, 'glowing-cubes-thickness-control', val => glowingCubeThickness = val);
+            glowingCubesSizeSlider = createSliderWithLabel('Cube Size', 10, 100, glowingCubeSize, 1, 'glowing-cubes-size-control', val => glowingCubeSize = val);
+            
+            // Trail System
+            trailHeadSizeSlider = createSliderWithLabel('Head Size', 1, 20, trailHeadSize, 1, 'trail-head-size-control', val => trailHeadSize = val);
+            trailHeadChanceSlider = createSliderWithLabel('Spawn Chance', 0, 0.2, trailHeadSpawnChance, 0.001, 'trail-head-chance-control', val => trailHeadSpawnChance = val);
+            trailSpeedSlider = createSliderWithLabel('Speed', 0.1, 10, trailSpeed, 0.1, 'trail-speed-control', val => trailSpeed = val);
+            trailLengthSlider = createSliderWithLabel('Length', 10, 500, trailLength, 10, 'trail-length-control', val => trailLength = val);
+            trailThicknessSlider = createSliderWithLabel('Thickness', 0.1, 10, trailThickness, 0.1, 'trail-thickness-control', val => trailThickness = val);
+            trailColorPicker = createColorPickerWithLabel('Trail Color', trailColor, 'trail-color-control', val => trailColor = val);
+            maxTrailsSlider = createSliderWithLabel('Max Trails', 10, 200, maxTrailHeads, 1, 'max-trails-control', val => maxTrailHeads = val);
+
+            // Initialize particles
+            for (let i = 0; i < numParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function draw() {
+            background(17, 24, 39); // Tailwind bg-gray-900
+
+            // Update FPS display
+            select('#fps-display').html('FPS: ' + frameRate().toFixed(1));
+
+            // Camera
+            orbitControl(2,2,0.1); // Enable mouse orbit control
+            rotateY(frameCount * camRotationSpeed);
+
+            // Manage particles (add/remove if count changes)
+            while (particles.length < numParticles) {
+                particles.push(new Particle());
+            }
+            while (particles.length > numParticles) {
+                particles.pop();
+            }
+
+            // Update and draw particles
+            for (let p of particles) {
+                p.update();
+                p.display();
+            }
+
+            // Manage trail heads
+            if (trailHeads.length < maxTrailHeads && random(1) < trailHeadSpawnChance) {
+                trailHeads.push(new TrailHead());
+            }
+            
+            // Prune excess trail heads if maxTrails is reduced
+            while (trailHeads.length > maxTrailHeads) {
+                trailHeads.shift(); // Remove the oldest ones
+            }
+
+
+            for (let i = trailHeads.length - 1; i >= 0; i--) {
+                let th = trailHeads[i];
+                th.update();
+                th.display();
+                if (th.isOutOfBounds()) { // Optional: remove if they go too far
+                    // trailHeads.splice(i, 1);
+                }
+            }
+
+            // Draw glowing cubes grid
+            if (showGlowingCubesGrid) {
+                drawGlowingCubes();
+            }
+        }
+
+        function drawGlowingCubes() {
+            stroke(glowingCubeColor);
+            strokeWeight(glowingCubeThickness);
+            noFill();
+            
+            const density = glowingCubeDensity;
+            const spacing = GRID_CELL_SIZE * 1.5; // Spacing for the glowing cubes grid
+            const offset = (density - 1) * spacing / 2;
+
+            for (let i = 0; i < density; i++) {
+                for (let j = 0; j < density; j++) {
+                    for (let k = 0; k < density; k++) {
+                        push();
+                        translate(i * spacing - offset, j * spacing - offset, k * spacing - offset);
+                        box(glowingCubeSize);
+                        pop();
+                    }
+                }
+            }
+        }
+
+        class Particle {
+            constructor() {
+                this.pos = p5.Vector.random3D().mult(random(WORLD_BOUNDS * 0.8, WORLD_BOUNDS));
+                this.vel = p5.Vector.random3D().mult(random(0.1, 0.5));
+                this.size = random(1, 3);
+                this.color = color(random(100, 200), random(100,200), random(200,255), 150);
+            }
+
+            update() {
+                this.pos.add(this.vel);
+                // Simple boundary check: wrap around
+                if (abs(this.pos.x) > WORLD_BOUNDS) this.pos.x *= -0.99;
+                if (abs(this.pos.y) > WORLD_BOUNDS) this.pos.y *= -0.99;
+                if (abs(this.pos.z) > WORLD_BOUNDS) this.pos.z *= -0.99;
+            }
+
+            display() {
+                push();
+                translate(this.pos.x, this.pos.y, this.pos.z);
+                noStroke();
+                fill(this.color);
+                sphere(this.size);
+                pop();
+            }
+        }
+
+        class TrailHead {
+            constructor() {
+                // Start at a random grid-aligned position
+                this.pos = createVector(
+                    floor(random(-WORLD_BOUNDS / GRID_CELL_SIZE, WORLD_BOUNDS / GRID_CELL_SIZE)) * GRID_CELL_SIZE,
+                    floor(random(-WORLD_BOUNDS / GRID_CELL_SIZE, WORLD_BOUNDS / GRID_CELL_SIZE)) * GRID_CELL_SIZE,
+                    floor(random(-WORLD_BOUNDS / GRID_CELL_SIZE, WORLD_BOUNDS / GRID_CELL_SIZE)) * GRID_CELL_SIZE
+                );
+                this.history = [];
+                this.stepsInCurrentDirection = 0;
+                this.maxStepsInDirection = floor(random(1, 4)) * GRID_CELL_SIZE; // Move 1 to 3 cell lengths
+                this.pickNewDirection();
+            }
+
+            pickNewDirection() {
+                let axes = [
+                    createVector(1, 0, 0), createVector(-1, 0, 0),
+                    createVector(0, 1, 0), createVector(0, -1, 0),
+                    createVector(0, 0, 1), createVector(0, 0, -1)
+                ];
+                // Avoid reversing direction if possible
+                let possibleDirections = axes.filter(dir => !this.currentDir || (dir.x !== -this.currentDir.x || dir.y !== -this.currentDir.y || dir.z !== -this.currentDir.z));
+                if (possibleDirections.length === 0) possibleDirections = axes; // Should not happen with 6 dirs
+
+                this.currentDir = random(possibleDirections);
+                this.targetPos = p5.Vector.add(this.pos, p5.Vector.mult(this.currentDir, GRID_CELL_SIZE)); // Target next grid point
+                this.stepsInCurrentDirection = 0;
+                this.maxStepsInDirection = floor(random(1, 3)) * GRID_CELL_SIZE; // How far to go in this direction
+            }
+            
+            update() {
+                // Add current position to history
+                this.history.push(this.pos.copy());
+                if (this.history.length > trailLength) {
+                    this.history.shift();
+                }
+
+                // Move towards target
+                let stepVec = this.currentDir.copy().mult(trailSpeed);
+                this.pos.add(stepVec);
+                this.stepsInCurrentDirection += trailSpeed;
+
+                // Check if reached target or max distance in current direction
+                if (this.stepsInCurrentDirection >= GRID_CELL_SIZE || p5.Vector.dist(this.pos, this.targetPos) < trailSpeed) {
+                    this.pos = this.targetPos.copy(); // Snap to grid point
+                    this.pickNewDirection();
+                }
+                
+                // Boundary check
+                if (abs(this.pos.x) > WORLD_BOUNDS || abs(this.pos.y) > WORLD_BOUNDS || abs(this.pos.z) > WORLD_BOUNDS) {
+                   this.resetPosition();
+                }
+            }
+            
+            resetPosition() {
+                // Reset to a new random grid-aligned position if out of bounds
+                 this.pos = createVector(
+                    floor(random(-WORLD_BOUNDS / GRID_CELL_SIZE, WORLD_BOUNDS / GRID_CELL_SIZE)) * GRID_CELL_SIZE,
+                    floor(random(-WORLD_BOUNDS / GRID_CELL_SIZE, WORLD_BOUNDS / GRID_CELL_SIZE)) * GRID_CELL_SIZE,
+                    floor(random(-WORLD_BOUNDS / GRID_CELL_SIZE, WORLD_BOUNDS / GRID_CELL_SIZE)) * GRID_CELL_SIZE
+                );
+                this.history = []; // Clear history
+                this.pickNewDirection();
+            }
+
+
+            display() {
+                // Draw trail
+                stroke(trailColor);
+                strokeWeight(trailThickness);
+                noFill();
+                beginShape();
+                for (let p of this.history) {
+                    vertex(p.x, p.y, p.z);
+                }
+                endShape();
+
+                // Draw head
+                push();
+                translate(this.pos.x, this.pos.y, this.pos.z);
+                fill(trailColor); // Head can be same color as trail or different
+                noStroke();
+                sphere(trailHeadSize);
+                pop();
+            }
+            
+            isOutOfBounds() { // More robust check
+                return abs(this.pos.x) > WORLD_BOUNDS * 1.2 || abs(this.pos.y) > WORLD_BOUNDS * 1.2 || abs(this.pos.z) > WORLD_BOUNDS * 1.2;
+            }
+        }
+
+        function windowResized() {
+            let canvasContainer = select('#canvas-container');
+            if (canvasContainer) {
+                 resizeCanvas(canvasContainer.width, canvasContainer.height);
+                 perspective(PI / 3.0, width / height, 0.1, WORLD_BOUNDS * 5); // Update perspective on resize
+            }
+        }
+
+    </script>
+</body>
+</html>

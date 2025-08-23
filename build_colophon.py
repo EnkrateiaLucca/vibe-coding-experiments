@@ -19,6 +19,28 @@ def format_commit_message(message):
     # Linkify URLs
     return linkify_urls(with_breaks)
 
+def is_bulk_initial_commit(commit_message):
+    """Check if this is the initial bulk commit that doesn't represent actual creation."""
+    bulk_indicators = [
+        "initial commit",
+        "set up vibe-coding experiments",
+        "bulk add",
+        "add all files",
+        "initial setup"
+    ]
+    message_lower = commit_message.lower()
+    return any(indicator in message_lower for indicator in bulk_indicators)
+
+def filter_meaningful_commits(commits):
+    """Filter out bulk commits and only keep meaningful individual commits."""
+    meaningful = []
+    for commit in commits:
+        message = commit.get('message', '')
+        # Skip the initial bulk commit
+        if not is_bulk_initial_commit(message):
+            meaningful.append(commit)
+    return meaningful
+
 def build_colophon():
     # Load the gathered_links.json file
     try:
@@ -33,6 +55,22 @@ def build_colophon():
         print("No pages found in gathered_links.json")
         return
     
+    # Filter pages to only include those with meaningful commits
+    pages_with_history = {}
+    for page_name, page_data in pages.items():
+        commits = page_data.get('commits', [])
+        meaningful_commits = filter_meaningful_commits(commits)
+        if meaningful_commits:
+            pages_with_history[page_name] = {
+                'commits': meaningful_commits,
+                'urls': page_data.get('urls', [])
+            }
+    
+    if not pages_with_history:
+        print("No pages with meaningful commit history found")
+        # Still create a basic colophon page
+        pages_with_history = {}
+    
     # Sort pages by most recent commit date (newest first)
     def get_most_recent_date(page_data):
         commits = page_data.get('commits', [])
@@ -43,7 +81,7 @@ def build_colophon():
         dates = [commit.get('date', "0000-00-00T00:00:00") for commit in commits]
         return max(dates) if dates else "0000-00-00T00:00:00"
     
-    sorted_pages = sorted(pages.items(), key=lambda x: get_most_recent_date(x[1]), reverse=True)
+    sorted_pages = sorted(pages_with_history.items(), key=lambda x: get_most_recent_date(x[1]), reverse=True)
     
     # Start building the HTML
     html_content = '''<!DOCTYPE html>
@@ -122,6 +160,15 @@ def build_colophon():
     <h1>Experiments Colophon</h1>
     <p>This page documents the creation history of the experiments on <a href="https://enkrateialucca.github.io/vibe-coding-experiments/">this site</a>, 
     including commit messages and links to the conversations used to build them.</p>
+'''
+    
+    # If no pages have meaningful history, show a message
+    if not sorted_pages:
+        html_content += '''
+    <div style="padding: 2rem; background: #f8f9fa; border-radius: 8px; margin: 2rem 0; text-align: center;">
+        <p style="color: #666; font-size: 1.1rem;">No experiments with documented creation history yet.</p>
+        <p style="color: #999;">As new experiments are added with proper commit messages, they will appear here.</p>
+    </div>
 '''
     
     # Add each page with its commits

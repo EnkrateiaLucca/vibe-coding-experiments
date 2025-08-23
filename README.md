@@ -3,7 +3,7 @@
 A collection of HTML/JavaScript experiments and tools built through AI-assisted "vibe coding".
 
 ## Live Site
-Visit the experiments at: https://[your-username].github.io/vibe-coding-experiments/
+Visit the experiments at: https://enkrateialucca.github.io/vibe-coding-experiments/
 
 ## About
 This repository contains various HTML applications and experiments created using LLM prompts. Each file represents a different experiment or tool, ranging from animations to interactive applications.

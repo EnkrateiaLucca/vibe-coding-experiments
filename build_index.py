@@ -137,7 +137,7 @@ def build_index():
     
     <div class="nav-links">
         <a href="colophon.html">View Colophon (Commit History)</a>
-        <a href="https://github.com/[your-username]/vibe-coding-experiments">GitHub Repository</a>
+        <a href="https://github.com/EnkrateiaLucca/vibe-coding-experiments">GitHub Repository</a>
     </div>
     
     <div class="stats">

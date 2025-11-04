@@ -55,8 +55,8 @@
 </head>
 <body>
     <div class="info">
-        <h1>Particle Animation Test</h1>
-        <p>Testing GitHub Pages automation - Move your mouse!</p>
+        <h1>Branching Particle System</h1>
+        <p>Click to add particles - Watch them bond and grow!</p>
     </div>
     
     <canvas id="canvas"></canvas>
@@ -70,114 +70,311 @@
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        
+
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        
+
         let particles = [];
+        let branches = [];
+        let bonds = [];
         let mouseX = canvas.width / 2;
         let mouseY = canvas.height / 2;
         let animationId;
         let isAnimating = true;
-        
+
         class Particle {
-            constructor(x, y) {
+            constructor(x, y, angle = null) {
                 this.x = x;
                 this.y = y;
-                this.size = Math.random() * 5 + 1;
-                this.speedX = Math.random() * 3 - 1.5;
-                this.speedY = Math.random() * 3 - 1.5;
+                this.size = 4;
+                this.angle = angle !== null ? angle : Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.05;
+                this.radius = Math.random() * 0.5 + 0.3;
+                this.speed = Math.random() * 0.5 + 0.3;
                 this.color = `hsl(${Math.random() * 360}, 100%, 70%)`;
-                this.life = 100;
+                this.branches = [];
+                this.life = 150;
+                this.maxLife = 150;
+                this.branchTimer = 0;
+                this.branchInterval = 30 + Math.random() * 20;
+                this.bonded = false;
             }
-            
+
             update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.life -= 0.5;
-                
-                // Attraction to mouse
-                const dx = mouseX - this.x;
-                const dy = mouseY - this.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance < 200) {
-                    this.speedX += dx * 0.0001;
-                    this.speedY += dy * 0.0001;
-                }
-                
+                // Circular motion with random variation
+                this.angle += this.rotationSpeed;
+                const randomX = (Math.random() - 0.5) * 0.5;
+                const randomY = (Math.random() - 0.5) * 0.5;
+
+                this.x += Math.cos(this.angle) * this.radius + randomX;
+                this.y += Math.sin(this.angle) * this.radius + randomY;
+
                 // Bounce off edges
-                if (this.x < 0 || this.x > canvas.width) this.speedX *= -0.9;
-                if (this.y < 0 || this.y > canvas.height) this.speedY *= -0.9;
+                if (this.x < 20) { this.x = 20; this.angle = Math.PI - this.angle; }
+                if (this.x > canvas.width - 20) { this.x = canvas.width - 20; this.angle = Math.PI - this.angle; }
+                if (this.y < 20) { this.y = 20; this.angle = -this.angle; }
+                if (this.y > canvas.height - 20) { this.y = canvas.height - 20; this.angle = -this.angle; }
+
+                // Decrease life if not bonded
+                if (!this.bonded) {
+                    this.life -= 0.3;
+                } else {
+                    // Bonded particles live longer
+                    this.life = Math.min(this.life + 0.1, this.maxLife * 2);
+                }
+
+                // Generate branches periodically
+                this.branchTimer++;
+                if (this.branchTimer >= this.branchInterval && this.branches.length < 4) {
+                    this.createBranch();
+                    this.branchTimer = 0;
+                    this.branchInterval = 30 + Math.random() * 20;
+                }
+
+                // Update branches
+                this.branches = this.branches.filter(branch => {
+                    branch.update(this.x, this.y);
+                    return branch.life > 0;
+                });
             }
-            
+
+            createBranch() {
+                const branchAngle = Math.random() * Math.PI * 2;
+                this.branches.push(new Branch(this.x, this.y, branchAngle, this.color, this));
+            }
+
             draw() {
-                ctx.globalAlpha = this.life / 100;
+                ctx.globalAlpha = Math.min(1, this.life / 100);
+
+                // Draw particle core
                 ctx.fillStyle = this.color;
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                 ctx.fill();
+
+                // Draw glow if bonded
+                if (this.bonded) {
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = this.color;
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+
+                // Draw branches
+                this.branches.forEach(branch => branch.draw());
+
                 ctx.globalAlpha = 1;
             }
         }
-        
-        function createParticle() {
-            const x = Math.random() * canvas.width;
-            const y = Math.random() * canvas.height;
-            particles.push(new Particle(x, y));
+
+        class Branch {
+            constructor(x, y, angle, color, parent) {
+                this.baseX = x;
+                this.baseY = y;
+                this.angle = angle;
+                this.length = 0;
+                this.maxLength = 30 + Math.random() * 40;
+                this.growthRate = 0.8 + Math.random() * 0.5;
+                this.color = color;
+                this.life = 100;
+                this.parent = parent;
+                this.width = 2;
+            }
+
+            update(parentX, parentY) {
+                this.baseX = parentX;
+                this.baseY = parentY;
+
+                // Grow the branch
+                if (this.length < this.maxLength) {
+                    this.length += this.growthRate;
+                } else {
+                    this.life -= 0.5;
+                }
+
+                // Slight wobble
+                this.angle += (Math.random() - 0.5) * 0.02;
+            }
+
+            getTipX() {
+                return this.baseX + Math.cos(this.angle) * this.length;
+            }
+
+            getTipY() {
+                return this.baseY + Math.sin(this.angle) * this.length;
+            }
+
+            draw() {
+                ctx.globalAlpha = Math.min(1, this.life / 100);
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = this.width;
+                ctx.lineCap = 'round';
+
+                ctx.beginPath();
+                ctx.moveTo(this.baseX, this.baseY);
+                ctx.lineTo(this.getTipX(), this.getTipY());
+                ctx.stroke();
+
+                // Draw tip
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.getTipX(), this.getTipY(), this.width, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.globalAlpha = 1;
+            }
         }
-        
+
+        class Bond {
+            constructor(branch1, branch2) {
+                this.branch1 = branch1;
+                this.branch2 = branch2;
+                this.strength = 0;
+                this.maxStrength = 100;
+            }
+
+            update() {
+                // Strengthen the bond over time
+                if (this.strength < this.maxStrength) {
+                    this.strength += 0.5;
+                }
+
+                // Mark parent particles as bonded
+                this.branch1.parent.bonded = true;
+                this.branch2.parent.bonded = true;
+
+                // Check if branches still exist
+                const branch1Exists = this.branch1.life > 0;
+                const branch2Exists = this.branch2.life > 0;
+
+                return branch1Exists && branch2Exists;
+            }
+
+            draw() {
+                ctx.globalAlpha = this.strength / this.maxStrength * 0.6;
+                ctx.strokeStyle = '#ffff00';
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+
+                ctx.beginPath();
+                ctx.moveTo(this.branch1.getTipX(), this.branch1.getTipY());
+                ctx.lineTo(this.branch2.getTipX(), this.branch2.getTipY());
+                ctx.stroke();
+
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function createParticle(x = null, y = null) {
+            const px = x !== null ? x : Math.random() * canvas.width;
+            const py = y !== null ? y : Math.random() * canvas.height;
+            particles.push(new Particle(px, py));
+        }
+
+        function checkBranches() {
+            const allBranches = [];
+            particles.forEach(particle => {
+                particle.branches.forEach(branch => {
+                    allBranches.push(branch);
+                });
+            });
+
+            // Check for connections between branch tips
+            for (let i = 0; i < allBranches.length; i++) {
+                for (let j = i + 1; j < allBranches.length; j++) {
+                    const b1 = allBranches[i];
+                    const b2 = allBranches[j];
+
+                    // Don't bond branches from the same particle
+                    if (b1.parent === b2.parent) continue;
+
+                    // Check if already bonded
+                    const alreadyBonded = bonds.some(bond =>
+                        (bond.branch1 === b1 && bond.branch2 === b2) ||
+                        (bond.branch1 === b2 && bond.branch2 === b1)
+                    );
+
+                    if (alreadyBonded) continue;
+
+                    const dx = b1.getTipX() - b2.getTipX();
+                    const dy = b1.getTipY() - b2.getTipY();
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    // Create bond if tips are close enough
+                    if (distance < 10 && b1.length > 20 && b2.length > 20) {
+                        bonds.push(new Bond(b1, b2));
+                    }
+                }
+            }
+        }
+
         function animate() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
+
+            // Update and filter particles
             particles = particles.filter(particle => particle.life > 0);
-            
+
             particles.forEach(particle => {
                 particle.update();
                 particle.draw();
             });
-            
-            if (particles.length < 100) {
+
+            // Check for branch connections
+            checkBranches();
+
+            // Update and draw bonds
+            bonds = bonds.filter(bond => bond.update());
+            bonds.forEach(bond => bond.draw());
+
+            // Spawn new particle occasionally if there are few particles
+            if (particles.length < 5 && Math.random() < 0.01) {
                 createParticle();
             }
-            
+
             if (isAnimating) {
                 animationId = requestAnimationFrame(animate);
             }
         }
-        
+
         function addParticles() {
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < 3; i++) {
                 createParticle();
             }
         }
-        
+
         function clearParticles() {
             particles = [];
+            branches = [];
+            bonds = [];
         }
-        
+
         function toggleAnimation() {
             isAnimating = !isAnimating;
             if (isAnimating) {
                 animate();
             }
         }
-        
+
+        canvas.addEventListener('click', (e) => {
+            createParticle(e.clientX, e.clientY);
+        });
+
         canvas.addEventListener('mousemove', (e) => {
             mouseX = e.clientX;
             mouseY = e.clientY;
         });
-        
+
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         });
-        
-        // Initialize
-        for (let i = 0; i < 50; i++) {
-            createParticle();
-        }
+
+        // Initialize with one particle
+        createParticle(canvas.width / 2, canvas.height / 2);
         animate();
     </script>
 </body>

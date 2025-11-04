@@ -5,66 +5,178 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Particle Animation Test</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
             overflow: hidden;
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            position: relative;
         }
-        
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 20% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 60%);
+            pointer-events: none;
+            animation: bgShift 20s ease-in-out infinite;
+        }
+
+        @keyframes bgShift {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.7; }
+        }
+
         canvas {
             display: block;
+            position: relative;
+            z-index: 1;
         }
-        
+
         .info {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            color: white;
-            font-size: 18px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
         }
-        
+
+        .info h1 {
+            font-size: 14px;
+            font-weight: 300;
+            margin: 0 0 8px 0;
+            color: rgba(255, 255, 255, 0.9);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        .info p {
+            font-size: 11px;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 1px;
+        }
+
         .controls {
             position: absolute;
-            bottom: 20px;
+            bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px 20px;
+            border-radius: 100px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
-        
+
         button {
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 2px solid white;
-            border-radius: 25px;
+            padding: 10px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50px;
             cursor: pointer;
-            font-size: 16px;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s;
+            font-size: 11px;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         button:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .stats {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 11px;
+            font-weight: 300;
+            letter-spacing: 1px;
+            text-align: right;
+            z-index: 10;
+            font-variant-numeric: tabular-nums;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 16px 20px;
+            border-radius: 16px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .stats div {
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .stats div:last-child {
+            margin-bottom: 0;
+        }
+
+        .stats .label {
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            font-size: 9px;
+            letter-spacing: 1.5px;
+        }
+
+        .stats .value {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            font-size: 13px;
         }
     </style>
 </head>
 <body>
     <div class="info">
-        <h1>Branching Particle System</h1>
-        <p>Click to add particles - Watch them bond and grow!</p>
+        <h1>Nebula</h1>
+        <p>Click to create energy nodes</p>
     </div>
-    
+
+    <div class="stats">
+        <div><span class="label">Molecules</span><span class="value" id="particleCount">0</span></div>
+        <div><span class="label">Bonds</span><span class="value" id="bondCount">0</span></div>
+        <div><span class="label">Branches</span><span class="value" id="branchCount">0</span></div>
+    </div>
+
     <canvas id="canvas"></canvas>
-    
+
     <div class="controls">
-        <button onclick="addParticles()">Add Particles</button>
-        <button onclick="clearParticles()">Clear</button>
-        <button onclick="toggleAnimation()">Pause/Resume</button>
+        <button onclick="clearParticles()"><span>Clear System</span></button>
+        <button onclick="toggleAnimation()"><span id="pauseBtn">Pause</span></button>
     </div>
     
     <script>
@@ -82,86 +194,226 @@
         let animationId;
         let isAnimating = true;
 
+        const chemColors = [
+            { hue: 240, name: 'indigo', rgb: [99, 102, 241] },      // Indigo
+            { hue: 330, name: 'pink', rgb: [236, 72, 153] },        // Pink
+            { hue: 210, name: 'blue', rgb: [59, 130, 246] },        // Blue
+            { hue: 280, name: 'purple', rgb: [168, 85, 247] },      // Purple
+            { hue: 170, name: 'cyan', rgb: [34, 211, 238] }         // Cyan
+        ];
+
+        let particleGroups = [];
+        let mouseInfluenceX = canvas.width / 2;
+        let mouseInfluenceY = canvas.height / 2;
+
         class Particle {
             constructor(x, y, angle = null) {
                 this.x = x;
                 this.y = y;
-                this.size = 4;
-                this.angle = angle !== null ? angle : Math.random() * Math.PI * 2;
-                this.rotationSpeed = (Math.random() - 0.5) * 0.05;
-                this.radius = Math.random() * 0.5 + 0.3;
-                this.speed = Math.random() * 0.5 + 0.3;
-                this.color = `hsl(${Math.random() * 360}, 100%, 70%)`;
+                this.baseSize = 8 + Math.random() * 4;
+                this.size = this.baseSize;
+                this.mass = 1;
+
+                // Elegant floating motion
+                const initialAngle = angle !== null ? angle : Math.random() * Math.PI * 2;
+                this.vx = Math.cos(initialAngle) * (Math.random() * 0.5 + 0.2);
+                this.vy = Math.sin(initialAngle) * (Math.random() * 0.5 + 0.2);
+                this.ax = 0;
+                this.ay = 0;
+
+                // Flow field parameters
+                this.flowAngle = Math.random() * Math.PI * 2;
+                this.flowSpeed = 0.02 + Math.random() * 0.01;
+
+                // Stunning colors
+                this.colorScheme = chemColors[Math.floor(Math.random() * chemColors.length)];
+                this.hue = this.colorScheme.hue;
+                this.rgb = this.colorScheme.rgb;
+
+                // Visual effects
+                this.glowIntensity = 0;
+                this.pulsePhase = Math.random() * Math.PI * 2;
+                this.rotationAngle = 0;
+
                 this.branches = [];
-                this.life = 150;
-                this.maxLife = 150;
+                this.life = 250;
+                this.maxLife = 250;
                 this.branchTimer = 0;
-                this.branchInterval = 30 + Math.random() * 20;
+                this.branchInterval = 80 + Math.random() * 60;
                 this.bonded = false;
+                this.energy = 0; // Energy level for visual effects
+            }
+
+            applyForce(fx, fy) {
+                this.ax += fx / this.mass;
+                this.ay += fy / this.mass;
             }
 
             update() {
-                // Circular motion with random variation
-                this.angle += this.rotationSpeed;
-                const randomX = (Math.random() - 0.5) * 0.5;
-                const randomY = (Math.random() - 0.5) * 0.5;
+                this.ax = 0;
+                this.ay = 0;
 
-                this.x += Math.cos(this.angle) * this.radius + randomX;
-                this.y += Math.sin(this.angle) * this.radius + randomY;
+                // Smooth flow field movement
+                this.flowAngle += (Math.random() - 0.5) * 0.1;
+                const flowFx = Math.cos(this.flowAngle) * this.flowSpeed;
+                const flowFy = Math.sin(this.flowAngle) * this.flowSpeed;
+                this.applyForce(flowFx, flowFy);
 
-                // Bounce off edges
-                if (this.x < 20) { this.x = 20; this.angle = Math.PI - this.angle; }
-                if (this.x > canvas.width - 20) { this.x = canvas.width - 20; this.angle = Math.PI - this.angle; }
-                if (this.y < 20) { this.y = 20; this.angle = -this.angle; }
-                if (this.y > canvas.height - 20) { this.y = canvas.height - 20; this.angle = -this.angle; }
-
-                // Decrease life if not bonded
-                if (!this.bonded) {
-                    this.life -= 0.3;
-                } else {
-                    // Bonded particles live longer
-                    this.life = Math.min(this.life + 0.1, this.maxLife * 2);
+                // Mouse influence (gentle attraction)
+                const dmx = mouseInfluenceX - this.x;
+                const dmy = mouseInfluenceY - this.y;
+                const mouseDist = Math.sqrt(dmx * dmx + dmy * dmy);
+                if (mouseDist < 300 && mouseDist > 0) {
+                    const mouseForce = (300 - mouseDist) * 0.00008;
+                    this.applyForce((dmx / mouseDist) * mouseForce, (dmy / mouseDist) * mouseForce);
                 }
 
-                // Generate branches periodically
+                // Particle interactions
+                particles.forEach(other => {
+                    if (other === this) return;
+
+                    const dx = other.x - this.x;
+                    const dy = other.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 1) return;
+
+                    // Soft repulsion
+                    const minDist = (this.size + other.size) * 2;
+                    if (dist < minDist) {
+                        const force = (minDist - dist) * 0.02;
+                        this.applyForce((-dx / dist) * force, (-dy / dist) * force);
+                    }
+
+                    // Long-range attraction for bonded particles
+                    if (this.bonded && other.bonded && dist < 250 && dist > minDist) {
+                        const force = 0.005;
+                        this.applyForce((dx / dist) * force, (dy / dist) * force);
+                    }
+                });
+
+                // Smooth damping for floating effect
+                this.vx *= 0.97;
+                this.vy *= 0.97;
+
+                this.vx += this.ax;
+                this.vy += this.ay;
+
+                // Gentle speed limit
+                const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                const maxSpeed = 2;
+                if (speed > maxSpeed) {
+                    this.vx = (this.vx / speed) * maxSpeed;
+                    this.vy = (this.vy / speed) * maxSpeed;
+                }
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Smooth wrapping boundaries
+                const margin = 60;
+                if (this.x < -margin) this.x = canvas.width + margin;
+                if (this.x > canvas.width + margin) this.x = -margin;
+                if (this.y < -margin) this.y = canvas.height + margin;
+                if (this.y > canvas.height + margin) this.y = -margin;
+
+                // Visual effects
+                this.pulsePhase += 0.03;
+                this.rotationAngle += 0.01;
+                this.size = this.baseSize + Math.sin(this.pulsePhase) * 2;
+
+                // Glow intensity based on connections
+                const targetGlow = this.bonded ? 1 : 0;
+                this.glowIntensity += (targetGlow - this.glowIntensity) * 0.1;
+
+                // Energy builds up with connections
+                this.energy = bonds.filter(b =>
+                    b.branch1.parent === this || b.branch2.parent === this
+                ).length * 20;
+
+                // Life management
+                if (!this.bonded) {
+                    this.life -= 0.15;
+                } else {
+                    this.life = Math.min(this.life + 0.3, this.maxLife * 4);
+                }
+
+                // Generate branches
                 this.branchTimer++;
-                if (this.branchTimer >= this.branchInterval && this.branches.length < 4) {
+                if (this.branchTimer >= this.branchInterval && this.branches.length < 8) {
                     this.createBranch();
                     this.branchTimer = 0;
-                    this.branchInterval = 30 + Math.random() * 20;
+                    this.branchInterval = 80 + Math.random() * 60;
                 }
 
-                // Update branches
                 this.branches = this.branches.filter(branch => {
-                    branch.update(this.x, this.y);
+                    branch.update(this.x, this.y, this.vx, this.vy);
                     return branch.life > 0;
                 });
             }
 
             createBranch() {
                 const branchAngle = Math.random() * Math.PI * 2;
-                this.branches.push(new Branch(this.x, this.y, branchAngle, this.color, this));
+                this.branches.push(new Branch(this.x, this.y, branchAngle, this));
             }
 
             draw() {
-                ctx.globalAlpha = Math.min(1, this.life / 100);
+                const alpha = Math.min(1, this.life / 100);
 
-                // Draw particle core
-                ctx.fillStyle = this.color;
+                // Multiple glow layers for depth
+                for (let i = 4; i > 0; i--) {
+                    const glowSize = this.size + (i * 8) + this.energy * 0.3;
+                    const glowAlpha = (alpha * 0.15 / i) * (1 + this.glowIntensity);
+
+                    const glowGradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, glowSize);
+                    glowGradient.addColorStop(0, `rgba(${this.rgb[0]}, ${this.rgb[1]}, ${this.rgb[2]}, ${glowAlpha})`);
+                    glowGradient.addColorStop(0.5, `rgba(${this.rgb[0]}, ${this.rgb[1]}, ${this.rgb[2]}, ${glowAlpha * 0.5})`);
+                    glowGradient.addColorStop(1, `rgba(${this.rgb[0]}, ${this.rgb[1]}, ${this.rgb[2]}, 0)`);
+
+                    ctx.fillStyle = glowGradient;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Outer ring (energy indicator)
+                if (this.bonded) {
+                    ctx.globalAlpha = alpha * this.glowIntensity * 0.6;
+                    ctx.strokeStyle = `rgba(${this.rgb[0]}, ${this.rgb[1]}, ${this.rgb[2]}, 0.8)`;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size + 6, this.rotationAngle, this.rotationAngle + Math.PI * 1.5);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size + 4, this.rotationAngle + Math.PI, this.rotationAngle + Math.PI * 2.5);
+                    ctx.stroke();
+                }
+
+                // Main particle with gradient
+                ctx.globalAlpha = alpha;
+                const mainGradient = ctx.createRadialGradient(
+                    this.x - this.size * 0.3,
+                    this.y - this.size * 0.3,
+                    0,
+                    this.x,
+                    this.y,
+                    this.size
+                );
+                mainGradient.addColorStop(0, `rgba(255, 255, 255, ${0.9 * alpha})`);
+                mainGradient.addColorStop(0.2, `rgba(${this.rgb[0]}, ${this.rgb[1]}, ${this.rgb[2]}, ${0.9 * alpha})`);
+                mainGradient.addColorStop(1, `rgba(${this.rgb[0] * 0.6}, ${this.rgb[1] * 0.6}, ${this.rgb[2] * 0.6}, ${0.8 * alpha})`);
+
+                ctx.fillStyle = mainGradient;
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Draw glow if bonded
-                if (this.bonded) {
-                    ctx.shadowBlur = 15;
-                    ctx.shadowColor = this.color;
-                    ctx.fillStyle = this.color;
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-                }
+                // Highlight
+                ctx.fillStyle = `rgba(255, 255, 255, ${0.7 * alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x - this.size * 0.3, this.y - this.size * 0.3, this.size * 0.3, 0, Math.PI * 2);
+                ctx.fill();
 
                 // Draw branches
                 this.branches.forEach(branch => branch.draw());
@@ -171,20 +423,25 @@
         }
 
         class Branch {
-            constructor(x, y, angle, color, parent) {
+            constructor(x, y, angle, parent) {
                 this.baseX = x;
                 this.baseY = y;
                 this.angle = angle;
                 this.length = 0;
-                this.maxLength = 30 + Math.random() * 40;
-                this.growthRate = 0.8 + Math.random() * 0.5;
-                this.color = color;
-                this.life = 100;
+                this.maxLength = 40 + Math.random() * 50;
+                this.growthRate = 1.5 + Math.random() * 1;
                 this.parent = parent;
-                this.width = 2;
+                this.life = 150;
+                this.width = 2.5;
+
+                // Physics for tip
+                this.tipVx = 0;
+                this.tipVy = 0;
+                this.stiffness = 0.08; // How rigid the branch is
+                this.damping = 0.92;
             }
 
-            update(parentX, parentY) {
+            update(parentX, parentY, parentVx, parentVy) {
                 this.baseX = parentX;
                 this.baseY = parentY;
 
@@ -192,11 +449,36 @@
                 if (this.length < this.maxLength) {
                     this.length += this.growthRate;
                 } else {
-                    this.life -= 0.5;
+                    this.life -= 0.3;
                 }
 
-                // Slight wobble
-                this.angle += (Math.random() - 0.5) * 0.02;
+                // Physics-based tip movement
+                const targetTipX = this.baseX + Math.cos(this.angle) * this.length;
+                const targetTipY = this.baseY + Math.sin(this.angle) * this.length;
+                const currentTipX = this.getTipX();
+                const currentTipY = this.getTipY();
+
+                // Spring force towards natural position
+                const dx = targetTipX - currentTipX;
+                const dy = targetTipY - currentTipY;
+
+                this.tipVx += dx * this.stiffness;
+                this.tipVy += dy * this.stiffness;
+
+                // Inherit some parent velocity (inertia)
+                this.tipVx += parentVx * 0.1;
+                this.tipVy += parentVy * 0.1;
+
+                // Damping
+                this.tipVx *= this.damping;
+                this.tipVy *= this.damping;
+
+                // Update angle based on tip velocity (branch bends)
+                if (this.length > 0) {
+                    const newTipX = currentTipX + this.tipVx;
+                    const newTipY = currentTipY + this.tipVy;
+                    this.angle = Math.atan2(newTipY - this.baseY, newTipX - this.baseX);
+                }
             }
 
             getTipX() {
@@ -208,9 +490,24 @@
             }
 
             draw() {
-                ctx.globalAlpha = Math.min(1, this.life / 100);
-                ctx.strokeStyle = this.color;
-                ctx.lineWidth = this.width;
+                const alpha = Math.min(1, this.life / 100);
+                const growthProgress = Math.min(1, this.length / this.maxLength);
+
+                // Glowing branch line
+                ctx.globalAlpha = alpha * 0.6;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = `rgba(${this.parent.rgb[0]}, ${this.parent.rgb[1]}, ${this.parent.rgb[2]}, 0.5)`;
+
+                const gradient = ctx.createLinearGradient(
+                    this.baseX, this.baseY,
+                    this.getTipX(), this.getTipY()
+                );
+                gradient.addColorStop(0, `rgba(${this.parent.rgb[0]}, ${this.parent.rgb[1]}, ${this.parent.rgb[2]}, ${0.3 * alpha})`);
+                gradient.addColorStop(0.5, `rgba(${this.parent.rgb[0]}, ${this.parent.rgb[1]}, ${this.parent.rgb[2]}, ${0.6 * alpha})`);
+                gradient.addColorStop(1, `rgba(${this.parent.rgb[0]}, ${this.parent.rgb[1]}, ${this.parent.rgb[2]}, ${0.8 * alpha})`);
+
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 2.5 - growthProgress;
                 ctx.lineCap = 'round';
 
                 ctx.beginPath();
@@ -218,10 +515,21 @@
                 ctx.lineTo(this.getTipX(), this.getTipY());
                 ctx.stroke();
 
-                // Draw tip
-                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 0;
+
+                // Glowing tip
+                ctx.globalAlpha = alpha * 0.8;
+                const tipGradient = ctx.createRadialGradient(
+                    this.getTipX(), this.getTipY(), 0,
+                    this.getTipX(), this.getTipY(), 6
+                );
+                tipGradient.addColorStop(0, `rgba(255, 255, 255, ${0.9 * alpha})`);
+                tipGradient.addColorStop(0.3, `rgba(${this.parent.rgb[0]}, ${this.parent.rgb[1]}, ${this.parent.rgb[2]}, ${0.7 * alpha})`);
+                tipGradient.addColorStop(1, `rgba(${this.parent.rgb[0]}, ${this.parent.rgb[1]}, ${this.parent.rgb[2]}, 0)`);
+
+                ctx.fillStyle = tipGradient;
                 ctx.beginPath();
-                ctx.arc(this.getTipX(), this.getTipY(), this.width, 0, Math.PI * 2);
+                ctx.arc(this.getTipX(), this.getTipY(), 6, 0, Math.PI * 2);
                 ctx.fill();
 
                 ctx.globalAlpha = 1;
@@ -234,34 +542,135 @@
                 this.branch2 = branch2;
                 this.strength = 0;
                 this.maxStrength = 100;
+
+                // Spring physics
+                const x1 = branch1.getTipX();
+                const y1 = branch1.getTipY();
+                const x2 = branch2.getTipX();
+                const y2 = branch2.getTipY();
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                this.restLength = Math.sqrt(dx * dx + dy * dy);
+                this.springConstant = 0.02;
+                this.damping = 0.95;
+
+                // Mix colors
+                this.rgb = [
+                    (branch1.parent.rgb[0] + branch2.parent.rgb[0]) / 2,
+                    (branch1.parent.rgb[1] + branch2.parent.rgb[1]) / 2,
+                    (branch1.parent.rgb[2] + branch2.parent.rgb[2]) / 2
+                ];
+
+                // Store connection for shape formation
+                if (!branch1.parent.connectedParticles) branch1.parent.connectedParticles = new Set();
+                if (!branch2.parent.connectedParticles) branch2.parent.connectedParticles = new Set();
+                branch1.parent.connectedParticles.add(branch2.parent);
+                branch2.parent.connectedParticles.add(branch1.parent);
             }
 
             update() {
-                // Strengthen the bond over time
                 if (this.strength < this.maxStrength) {
-                    this.strength += 0.5;
+                    this.strength += 2;
                 }
 
-                // Mark parent particles as bonded
-                this.branch1.parent.bonded = true;
-                this.branch2.parent.bonded = true;
+                // Apply spring forces between bonded particles
+                const p1 = this.branch1.parent;
+                const p2 = this.branch2.parent;
 
-                // Check if branches still exist
+                const dx = p2.x - p1.x;
+                const dy = p2.y - p1.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist > 0) {
+                    // Spring force (Hooke's law)
+                    const stretch = dist - this.restLength;
+                    const forceMagnitude = stretch * this.springConstant;
+
+                    const fx = (dx / dist) * forceMagnitude;
+                    const fy = (dy / dist) * forceMagnitude;
+
+                    // Apply equal and opposite forces
+                    p1.applyForce(fx, fy);
+                    p2.applyForce(-fx, -fy);
+                }
+
+                p1.bonded = true;
+                p2.bonded = true;
+
+                // Extend life when bonded
+                this.branch1.life = Math.min(this.branch1.life + 0.6, 250);
+                this.branch2.life = Math.min(this.branch2.life + 0.6, 250);
+
                 const branch1Exists = this.branch1.life > 0;
                 const branch2Exists = this.branch2.life > 0;
+
+                if (!branch1Exists || !branch2Exists) {
+                    // Remove connection
+                    if (p1.connectedParticles) {
+                        p1.connectedParticles.delete(p2);
+                    }
+                    if (p2.connectedParticles) {
+                        p2.connectedParticles.delete(p1);
+                    }
+                }
 
                 return branch1Exists && branch2Exists;
             }
 
             draw() {
-                ctx.globalAlpha = this.strength / this.maxStrength * 0.6;
-                ctx.strokeStyle = '#ffff00';
-                ctx.lineWidth = 2;
+                const alpha = this.strength / this.maxStrength;
+                const x1 = this.branch1.getTipX();
+                const y1 = this.branch1.getTipY();
+                const x2 = this.branch2.getTipX();
+                const y2 = this.branch2.getTipY();
+
+                // Energy particles flowing
+                const numParticles = 5;
+                for (let i = 0; i < numParticles; i++) {
+                    const progress = ((Date.now() * 0.001 + i / numParticles) % 1);
+                    const px = x1 + (x2 - x1) * progress;
+                    const py = y1 + (y2 - y1) * progress;
+
+                    const particleGradient = ctx.createRadialGradient(px, py, 0, px, py, 8);
+                    particleGradient.addColorStop(0, `rgba(255, 255, 255, ${0.8 * alpha})`);
+                    particleGradient.addColorStop(0.4, `rgba(${this.rgb[0]}, ${this.rgb[1]}, ${this.rgb[2]}, ${0.6 * alpha})`);
+                    particleGradient.addColorStop(1, `rgba(${this.rgb[0]}, ${this.rgb[1]}, ${this.rgb[2]}, 0)`);
+
+                    ctx.fillStyle = particleGradient;
+                    ctx.beginPath();
+                    ctx.arc(px, py, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Glowing bond line
+                ctx.globalAlpha = alpha * 0.7;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = `rgba(${this.rgb[0]}, ${this.rgb[1]}, ${this.rgb[2]}, 0.8)`;
+
+                const bondGradient = ctx.createLinearGradient(x1, y1, x2, y2);
+                bondGradient.addColorStop(0, `rgba(${this.branch1.parent.rgb[0]}, ${this.branch1.parent.rgb[1]}, ${this.branch1.parent.rgb[2]}, ${0.7 * alpha})`);
+                bondGradient.addColorStop(0.5, `rgba(${this.rgb[0]}, ${this.rgb[1]}, ${this.rgb[2]}, ${0.9 * alpha})`);
+                bondGradient.addColorStop(1, `rgba(${this.branch2.parent.rgb[0]}, ${this.branch2.parent.rgb[1]}, ${this.branch2.parent.rgb[2]}, ${0.7 * alpha})`);
+
+                ctx.strokeStyle = bondGradient;
+                ctx.lineWidth = 3;
                 ctx.lineCap = 'round';
 
                 ctx.beginPath();
-                ctx.moveTo(this.branch1.getTipX(), this.branch1.getTipY());
-                ctx.lineTo(this.branch2.getTipX(), this.branch2.getTipY());
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+
+                ctx.shadowBlur = 0;
+
+                // Inner bright line
+                ctx.globalAlpha = alpha * 0.9;
+                ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 * alpha})`;
+                ctx.lineWidth = 1;
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
                 ctx.stroke();
 
                 ctx.globalAlpha = 1;
@@ -288,10 +697,8 @@
                     const b1 = allBranches[i];
                     const b2 = allBranches[j];
 
-                    // Don't bond branches from the same particle
                     if (b1.parent === b2.parent) continue;
 
-                    // Check if already bonded
                     const alreadyBonded = bonds.some(bond =>
                         (bond.branch1 === b1 && bond.branch2 === b2) ||
                         (bond.branch1 === b2 && bond.branch2 === b1)
@@ -303,46 +710,130 @@
                     const dy = b1.getTipY() - b2.getTipY();
                     const distance = Math.sqrt(dx * dx + dy * dy);
 
-                    // Create bond if tips are close enough
-                    if (distance < 10 && b1.length > 20 && b2.length > 20) {
+                    if (distance < 20 && b1.length > 25 && b2.length > 25) {
                         bonds.push(new Bond(b1, b2));
                     }
                 }
             }
         }
 
+        function drawEmergentShapes() {
+            // Find groups of connected particles and draw shapes between them
+            particles.forEach(particle => {
+                if (!particle.connectedParticles || particle.connectedParticles.size < 2) return;
+
+                const connected = Array.from(particle.connectedParticles);
+
+                // Draw triangles when 3 particles are connected
+                for (let i = 0; i < connected.length; i++) {
+                    for (let j = i + 1; j < connected.length; j++) {
+                        const p1 = connected[i];
+                        const p2 = connected[j];
+
+                        // Check if p1 and p2 are also connected to each other
+                        if (p1.connectedParticles && p1.connectedParticles.has(p2)) {
+                            // We have a triangle: particle, p1, p2
+                            const alpha = Math.min(
+                                particle.life / 100,
+                                p1.life / 100,
+                                p2.life / 100
+                            );
+
+                            // Draw filled triangle
+                            ctx.globalAlpha = alpha * 0.08;
+                            const avgRgb = [
+                                (particle.rgb[0] + p1.rgb[0] + p2.rgb[0]) / 3,
+                                (particle.rgb[1] + p1.rgb[1] + p2.rgb[1]) / 3,
+                                (particle.rgb[2] + p1.rgb[2] + p2.rgb[2]) / 3
+                            ];
+                            ctx.fillStyle = `rgba(${avgRgb[0]}, ${avgRgb[1]}, ${avgRgb[2]}, 0.4)`;
+
+                            ctx.beginPath();
+                            ctx.moveTo(particle.x, particle.y);
+                            ctx.lineTo(p1.x, p1.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.closePath();
+                            ctx.fill();
+
+                            // Draw triangle outline
+                            ctx.globalAlpha = alpha * 0.15;
+                            ctx.strokeStyle = `rgba(${avgRgb[0]}, ${avgRgb[1]}, ${avgRgb[2]}, 0.5)`;
+                            ctx.lineWidth = 0.5;
+                            ctx.stroke();
+
+                            ctx.globalAlpha = 1;
+                        }
+                    }
+                }
+
+                // Draw polygons for larger groups
+                if (connected.length >= 4) {
+                    // Sort connected particles by angle from center particle
+                    const sorted = connected.slice().sort((a, b) => {
+                        const angleA = Math.atan2(a.y - particle.y, a.x - particle.x);
+                        const angleB = Math.atan2(b.y - particle.y, b.x - particle.x);
+                        return angleA - angleB;
+                    });
+
+                    const alpha = Math.min(particle.life / 100, 1);
+                    ctx.globalAlpha = alpha * 0.06;
+
+                    // Draw polygon connecting the sorted particles
+                    ctx.beginPath();
+                    ctx.moveTo(particle.x, particle.y);
+                    sorted.forEach(p => {
+                        ctx.lineTo(p.x, p.y);
+                    });
+                    ctx.closePath();
+
+                    const avgRgb = [
+                        sorted.reduce((sum, p) => sum + p.rgb[0], particle.rgb[0]) / (sorted.length + 1),
+                        sorted.reduce((sum, p) => sum + p.rgb[1], particle.rgb[1]) / (sorted.length + 1),
+                        sorted.reduce((sum, p) => sum + p.rgb[2], particle.rgb[2]) / (sorted.length + 1)
+                    ];
+
+                    ctx.fillStyle = `rgba(${avgRgb[0]}, ${avgRgb[1]}, ${avgRgb[2]}, 0.3)`;
+                    ctx.fill();
+
+                    ctx.globalAlpha = 1;
+                }
+            });
+        }
+
         function animate() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            // Smooth fade with slight color tint
+            ctx.fillStyle = 'rgba(10, 10, 15, 0.2)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Update and filter particles
             particles = particles.filter(particle => particle.life > 0);
 
+            // Check for branch connections
+            checkBranches();
+
+            // Update bonds
+            bonds = bonds.filter(bond => bond.update());
+
+            // Draw emergent shapes first (background layer)
+            drawEmergentShapes();
+
+            // Draw bonds
+            bonds.forEach(bond => bond.draw());
+
+            // Draw particles on top
             particles.forEach(particle => {
                 particle.update();
                 particle.draw();
             });
 
-            // Check for branch connections
-            checkBranches();
-
-            // Update and draw bonds
-            bonds = bonds.filter(bond => bond.update());
-            bonds.forEach(bond => bond.draw());
-
-            // Spawn new particle occasionally if there are few particles
-            if (particles.length < 5 && Math.random() < 0.01) {
-                createParticle();
-            }
+            // Update stats
+            const totalBranches = particles.reduce((sum, p) => sum + p.branches.length, 0);
+            document.getElementById('particleCount').textContent = particles.length;
+            document.getElementById('bondCount').textContent = bonds.length;
+            document.getElementById('branchCount').textContent = totalBranches;
 
             if (isAnimating) {
                 animationId = requestAnimationFrame(animate);
-            }
-        }
-
-        function addParticles() {
-            for (let i = 0; i < 3; i++) {
-                createParticle();
             }
         }
 
@@ -354,18 +845,37 @@
 
         function toggleAnimation() {
             isAnimating = !isAnimating;
+            document.getElementById('pauseBtn').textContent = isAnimating ? 'Pause' : 'Resume';
             if (isAnimating) {
                 animate();
             }
         }
 
         canvas.addEventListener('click', (e) => {
-            createParticle(e.clientX, e.clientY);
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            createParticle(x, y);
+        });
+        
+        // Also support touch for mobile
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.changedTouches[0];
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            createParticle(x, y);
         });
 
         canvas.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+
+            // Smooth mouse influence
+            mouseInfluenceX += (mouseX - mouseInfluenceX) * 0.1;
+            mouseInfluenceY += (mouseY - mouseInfluenceY) * 0.1;
         });
 
         window.addEventListener('resize', () => {
@@ -373,8 +883,7 @@
             canvas.height = window.innerHeight;
         });
 
-        // Initialize with one particle
-        createParticle(canvas.width / 2, canvas.height / 2);
+        // Start animation - particles will be added by user clicks
         animate();
     </script>
 </body>

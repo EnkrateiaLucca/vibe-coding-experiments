@@ -1,0 +1,400 @@
+<!--
+RECONSTRUCTED PROMPT:
+Create a surreal abstract CSS animation representing an "Ocean of Learning" with multiple animated elements. The animation should be purely CSS-based and include:
+- Ocean waves that move in continuous motion across the bottom
+- Floating knowledge symbols (📚, 🔬, ⚗️, 🧠, 💡) that float up from bottom to top
+- Morphing organic shapes with gradient colors that continuously transform
+- A particle system of small dots flowing upward
+- A central learning vortex with rotating rings and pulsing center
+- Floating mathematical equations (E=mc², Maxwell's equations, Schrödinger, integrals)
+- Depth layers with parallax effects for dimensional feeling
+- Interactive hover effects that speed up animations
+- Dynamic color shifting and JavaScript-generated random symbols
+- Blue ocean gradient background from dark navy to lighter blue
+- Responsive design for mobile devices
+- Mouse movement interactions that influence particle positions
+The overall aesthetic should feel like diving deep into an ocean of knowledge, with surreal, dreamlike qualities that represent the endless nature of learning.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ocean of Learning - Surreal Abstract</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 100vh;
+            overflow: hidden;
+            background: linear-gradient(180deg, #001122 0%, #003366 30%, #004080 60%, #0066cc 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .ocean-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Ocean Waves */
+        .wave {
+            position: absolute;
+            width: 200%;
+            height: 100px;
+            background: linear-gradient(90deg, transparent, rgba(0, 150, 255, 0.3), transparent);
+            animation: wave-motion 8s infinite linear;
+        }
+
+        .wave:nth-child(1) {
+            bottom: 0;
+            animation-delay: 0s;
+            opacity: 0.7;
+        }
+
+        .wave:nth-child(2) {
+            bottom: 20px;
+            animation-delay: -2s;
+            opacity: 0.5;
+        }
+
+        .wave:nth-child(3) {
+            bottom: 40px;
+            animation-delay: -4s;
+            opacity: 0.3;
+        }
+
+        @keyframes wave-motion {
+            0% { transform: translateX(-100%) rotate(0deg); }
+            100% { transform: translateX(0%) rotate(360deg); }
+        }
+
+        /* Floating Knowledge Elements */
+        .knowledge-particle {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.5rem;
+            animation: float-knowledge 12s infinite ease-in-out;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .knowledge-particle:nth-child(4) { left: 10%; animation-delay: 0s; }
+        .knowledge-particle:nth-child(5) { left: 25%; animation-delay: -3s; }
+        .knowledge-particle:nth-child(6) { left: 40%; animation-delay: -6s; }
+        .knowledge-particle:nth-child(7) { left: 60%; animation-delay: -9s; }
+        .knowledge-particle:nth-child(8) { left: 80%; animation-delay: -12s; }
+
+        @keyframes float-knowledge {
+            0%, 100% { 
+                transform: translateY(100vh) scale(0.5) rotate(0deg);
+                opacity: 0;
+            }
+            10%, 90% {
+                opacity: 1;
+            }
+            50% { 
+                transform: translateY(-20vh) scale(1.2) rotate(180deg);
+                opacity: 1;
+            }
+        }
+
+        /* Surreal Morphing Shapes */
+        .morph-shape {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24);
+            background-size: 400% 400%;
+            animation: morph-color 6s infinite, morph-transform 10s infinite ease-in-out;
+            filter: blur(2px);
+            opacity: 0.6;
+        }
+
+        .morph-shape:nth-child(9) { 
+            top: 20%; 
+            left: 15%; 
+            animation-delay: 0s;
+        }
+        .morph-shape:nth-child(10) { 
+            top: 60%; 
+            right: 20%; 
+            animation-delay: -3s;
+        }
+        .morph-shape:nth-child(11) { 
+            bottom: 30%; 
+            left: 70%; 
+            animation-delay: -6s;
+        }
+
+        @keyframes morph-color {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes morph-transform {
+            0%, 100% { 
+                transform: scale(1) rotate(0deg);
+                border-radius: 50%;
+            }
+            25% { 
+                transform: scale(1.5) rotate(90deg);
+                border-radius: 20% 80% 50% 30%;
+            }
+            50% { 
+                transform: scale(0.8) rotate(180deg);
+                border-radius: 80% 20% 70% 40%;
+            }
+            75% { 
+                transform: scale(1.3) rotate(270deg);
+                border-radius: 30% 70% 20% 80%;
+            }
+        }
+
+        /* Particle System */
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation: particle-flow 15s infinite linear;
+        }
+
+        .particle:nth-child(12) { left: 5%; animation-delay: 0s; }
+        .particle:nth-child(13) { left: 15%; animation-delay: -2s; }
+        .particle:nth-child(14) { left: 25%; animation-delay: -4s; }
+        .particle:nth-child(15) { left: 35%; animation-delay: -6s; }
+        .particle:nth-child(16) { left: 45%; animation-delay: -8s; }
+        .particle:nth-child(17) { left: 55%; animation-delay: -10s; }
+        .particle:nth-child(18) { left: 65%; animation-delay: -12s; }
+        .particle:nth-child(19) { left: 75%; animation-delay: -14s; }
+        .particle:nth-child(20) { left: 85%; animation-delay: -16s; }
+        .particle:nth-child(21) { left: 95%; animation-delay: -18s; }
+
+        @keyframes particle-flow {
+            0% { 
+                transform: translateY(100vh) translateX(0px) scale(0);
+                opacity: 0;
+            }
+            5% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            95% {
+                opacity: 1;
+            }
+            100% { 
+                transform: translateY(-10vh) translateX(200px) scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* Central Learning Vortex */
+        .learning-vortex {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300px;
+            height: 300px;
+            transform: translate(-50%, -50%);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: vortex-spin 20s infinite linear;
+        }
+
+        .learning-vortex::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 200px;
+            height: 200px;
+            transform: translate(-50%, -50%);
+            border: 2px solid rgba(0, 255, 255, 0.4);
+            border-radius: 50%;
+            animation: vortex-spin 15s infinite linear reverse;
+        }
+
+        .learning-vortex::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100px;
+            height: 100px;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1), transparent);
+            border-radius: 50%;
+            animation: vortex-pulse 8s infinite ease-in-out;
+        }
+
+        @keyframes vortex-spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        @keyframes vortex-pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+            50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.1; }
+        }
+
+        /* Floating Equations and Symbols */
+        .equation {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+            font-family: 'Courier New', monospace;
+            animation: equation-drift 18s infinite ease-in-out;
+            text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+        }
+
+        .equation:nth-child(22) { top: 15%; left: 20%; animation-delay: 0s; }
+        .equation:nth-child(23) { top: 25%; right: 15%; animation-delay: -3s; }
+        .equation:nth-child(24) { bottom: 25%; left: 10%; animation-delay: -6s; }
+        .equation:nth-child(25) { bottom: 40%; right: 25%; animation-delay: -9s; }
+
+        @keyframes equation-drift {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.7; }
+            25% { transform: translateY(-30px) rotate(5deg); opacity: 1; }
+            50% { transform: translateY(-10px) rotate(-3deg); opacity: 0.8; }
+            75% { transform: translateY(-40px) rotate(8deg); opacity: 1; }
+        }
+
+        /* Depth Layers with Parallax Effect */
+        .depth-layer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 20, 40, 0.1) 100%);
+            animation: depth-shift 25s infinite ease-in-out;
+        }
+
+        .depth-layer:nth-child(26) { animation-delay: 0s; }
+        .depth-layer:nth-child(27) { animation-delay: -8s; }
+        .depth-layer:nth-child(28) { animation-delay: -16s; }
+
+        @keyframes depth-shift {
+            0%, 100% { transform: scale(1) translate(0, 0); }
+            33% { transform: scale(1.1) translate(-20px, -10px); }
+            66% { transform: scale(0.9) translate(15px, 5px); }
+        }
+
+        /* Interactive Hover Effects */
+        .ocean-container:hover .morph-shape {
+            animation-duration: 3s;
+        }
+
+        .ocean-container:hover .knowledge-particle {
+            animation-duration: 6s;
+        }
+
+        .ocean-container:hover .learning-vortex {
+            animation-duration: 10s;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .knowledge-particle { font-size: 1rem; }
+            .learning-vortex { width: 200px; height: 200px; }
+            .morph-shape { width: 100px; height: 100px; }
+            .equation { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="ocean-container">
+        <!-- Ocean Waves -->
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+
+        <!-- Floating Knowledge Elements -->
+        <div class="knowledge-particle">📚</div>
+        <div class="knowledge-particle">🔬</div>
+        <div class="knowledge-particle">⚗️</div>
+        <div class="knowledge-particle">🧠</div>
+        <div class="knowledge-particle">💡</div>
+
+        <!-- Surreal Morphing Shapes -->
+        <div class="morph-shape"></div>
+        <div class="morph-shape"></div>
+        <div class="morph-shape"></div>
+
+        <!-- Particle System -->
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+
+        <!-- Central Learning Vortex -->
+        <div class="learning-vortex"></div>
+
+        <!-- Floating Equations -->
+        <div class="equation">E = mc²</div>
+        <div class="equation">∇ × B = μ₀J</div>
+        <div class="equation">∂ψ/∂t = iHψ</div>
+        <div class="equation">f(x) = ∫ g(t)dt</div>
+
+        <!-- Depth Layers -->
+        <div class="depth-layer"></div>
+        <div class="depth-layer"></div>
+        <div class="depth-layer"></div>
+    </div>
+
+    <script>
+        // Add dynamic interactivity
+        document.addEventListener('mousemove', (e) => {
+            const particles = document.querySelectorAll('.particle');
+            const mouseX = e.clientX / window.innerWidth;
+            const mouseY = e.clientY / window.innerHeight;
+            
+            particles.forEach((particle, index) => {
+                const delay = index * 0.1;
+                setTimeout(() => {
+                    particle.style.transform += ` translate(${mouseX * 20}px, ${mouseY * 10}px)`;
+                }, delay * 1000);
+            });
+        });
+
+        // Dynamic color shifting for morphing shapes
+        setInterval(() => {
+            const shapes = document.querySelectorAll('.morph-shape');
+            shapes.forEach(shape => {
+                const hue = Math.random() * 360;
+                shape.style.filter = `blur(2px) hue-rotate(${hue}deg)`;
+            });
+        }, 3000);
+
+        // Add random knowledge symbols
+        const knowledgeSymbols = ['🌊', '📖', '🔭', '🧬', '⚡', '🔮', '🎭', '🎨', '🌀', '✨'];
+        
+        setInterval(() => {
+            const symbol = document.createElement('div');
+            symbol.className = 'knowledge-particle';
+            symbol.textContent = knowledgeSymbols[Math.floor(Math.random() * knowledgeSymbols.length)];
+            symbol.style.left = Math.random() * 100 + '%';
+            symbol.style.animationDelay = '0s';
+            symbol.style.animationDuration = (8 + Math.random() * 8) + 's';
+            
+            document.querySelector('.ocean-container').appendChild(symbol);
+            
+            setTimeout(() => {
+                symbol.remove();
+            }, 12000);
+        }, 2000);
+    </script>
+</body>
+</html>

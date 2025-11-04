@@ -1,0 +1,316 @@
+<!--
+AI Text Animation with Sleek Space Aesthetic
+A three.js particle animation that forms the letters 'AI' with:
+- 200+ glowing particles in cyan/blue/purple space colors
+- Particles forming 'AI' text using calculated letter positions
+- Connection lines between nearby particles
+- Gentle orbital motion and attraction forces
+- Smooth color transitions and pulsing effects
+- Futuristic lighting with blue/cyan colors
+- Dynamic camera movement
+- Deep space gradient background
+- Sleek, technological aesthetic
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: radial-gradient(circle, #000510, #000000);
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            display: block;
+        }
+        .info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00d9ff;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="info">AI: Artificial Intelligence in Motion</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x000000);
+        document.body.appendChild(renderer.domElement);
+
+        // Particle system for AI text
+        const particleCount = 250;
+        const particles = [];
+        const connections = [];
+
+        // Function to create 'AI' letter positions
+        function createAIPoints() {
+            const points = [];
+            const scale = 2;
+            const spacing = 3;
+
+            // Letter 'A' - proper triangle with horizontal bar
+            const aCenter = -spacing;
+            const aWidth = 2.5 * scale;
+            const aHeight = 4 * scale;
+
+            // Left leg of A (bottom-left to top)
+            for (let i = 0; i <= 25; i++) {
+                const t = i / 25;
+                points.push(new THREE.Vector3(
+                    aCenter - aWidth/2 + t * (aWidth/2),
+                    -aHeight/2 + t * aHeight,
+                    0
+                ));
+            }
+            // Right leg of A (top to bottom-right)
+            for (let i = 0; i <= 25; i++) {
+                const t = i / 25;
+                points.push(new THREE.Vector3(
+                    aCenter + t * (aWidth/2),
+                    aHeight/2 - t * aHeight,
+                    0
+                ));
+            }
+            // Horizontal bar of A (middle crossbar)
+            for (let i = 0; i <= 15; i++) {
+                const t = i / 15;
+                points.push(new THREE.Vector3(
+                    aCenter - aWidth/4 + t * (aWidth/2),
+                    -aHeight/8,
+                    0
+                ));
+            }
+
+            // Letter 'I' - vertical line with top and bottom
+            const iCenter = spacing;
+            // Vertical line
+            for (let i = 0; i <= 25; i++) {
+                const t = i / 25;
+                points.push(new THREE.Vector3(
+                    iCenter,
+                    -2 * scale + t * 4 * scale,
+                    0
+                ));
+            }
+            // Top bar
+            for (let i = 0; i <= 8; i++) {
+                const t = i / 8;
+                points.push(new THREE.Vector3(
+                    iCenter - 0.5 * scale + t * scale,
+                    2 * scale,
+                    0
+                ));
+            }
+            // Bottom bar
+            for (let i = 0; i <= 8; i++) {
+                const t = i / 8;
+                points.push(new THREE.Vector3(
+                    iCenter - 0.5 * scale + t * scale,
+                    -2 * scale,
+                    0
+                ));
+            }
+
+            return points;
+        }
+
+        const aiPoints = createAIPoints();
+
+        // Create particles
+        for (let i = 0; i < particleCount; i++) {
+            const geometry = new THREE.SphereGeometry(0.03, 8, 6);
+            const hue = 0.5 + Math.random() * 0.15; // Cyan to blue hues
+            const material = new THREE.MeshBasicMaterial({
+                color: new THREE.Color().setHSL(
+                    hue,
+                    0.9 + Math.random() * 0.1,
+                    0.5 + Math.random() * 0.3
+                ),
+                transparent: true,
+                opacity: 0.9
+            });
+
+            const particle = new THREE.Mesh(geometry, material);
+
+            // Assign target point from AI text
+            const targetPoint = aiPoints[i % aiPoints.length].clone();
+            targetPoint.z = (Math.random() - 0.5) * 3;
+
+            // Random initial positions
+            particle.position.set(
+                (Math.random() - 0.5) * 15,
+                (Math.random() - 0.5) * 15,
+                (Math.random() - 0.5) * 15
+            );
+
+            // Store original properties for animation
+            particle.userData = {
+                targetPoint: targetPoint,
+                phase: Math.random() * Math.PI * 2,
+                speed: 0.5 + Math.random() * 0.5,
+                attraction: Math.random() * 0.03 + 0.02,
+                baseHue: hue
+            };
+
+            scene.add(particle);
+            particles.push(particle);
+        }
+
+        // Create connection lines
+        const lineGeometry = new THREE.BufferGeometry();
+        const linePositions = new Float32Array(particleCount * particleCount * 6);
+        lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+        
+        const lineMaterial = new THREE.LineBasicMaterial({
+            color: 0x00d9ff,
+            transparent: true,
+            opacity: 0.15
+        });
+        
+        const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+        scene.add(lines);
+
+        // Circular orbit points for dynamic movement
+        const orbitPoints = [];
+        for (let i = 0; i < 16; i++) {
+            const t = (i / 16) * Math.PI * 2;
+            const radius = 0.5;
+            orbitPoints.push(new THREE.Vector3(
+                Math.cos(t) * radius,
+                Math.sin(t) * radius,
+                Math.sin(t * 2) * radius
+            ));
+        }
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+        scene.add(ambientLight);
+        
+        const pointLight = new THREE.PointLight(0x00d9ff, 1.5, 100);
+        pointLight.position.set(0, 0, 10);
+        scene.add(pointLight);
+
+        const pointLight2 = new THREE.PointLight(0x6a0dad, 0.8, 100);
+        pointLight2.position.set(5, 5, 5);
+        scene.add(pointLight2);
+
+        // Camera position
+        camera.position.z = 15;
+
+        let time = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.01;
+
+            // Update particles with AI text formation behavior
+            particles.forEach((particle, i) => {
+                const userData = particle.userData;
+
+                // Breathing/pulsing motion
+                const pulse = Math.sin(time * userData.speed + userData.phase) * 0.2;
+                const scale = 1 + pulse * 0.3;
+                particle.scale.setScalar(scale);
+
+                // Attraction to AI text shape
+                const orbitIndex = Math.floor(time * userData.speed * 0.5 + i) % orbitPoints.length;
+                const orbitOffset = orbitPoints[orbitIndex].clone();
+                const target = userData.targetPoint.clone().add(orbitOffset);
+
+                // Add subtle floating motion
+                target.add(new THREE.Vector3(
+                    Math.sin(time * 0.3 + i) * 0.2,
+                    Math.cos(time * 0.4 + i) * 0.2,
+                    Math.sin(time * 0.2 + i) * 0.3
+                ));
+
+                // Strong attraction to form AI letters
+                const direction = target.clone().sub(particle.position);
+                direction.multiplyScalar(userData.attraction);
+                particle.position.add(direction);
+
+                // Gentle orbital motion
+                const radius = particle.position.length();
+                if (radius > 0) {
+                    const orbitalForce = new THREE.Vector3(-particle.position.z * 0.1, 0, particle.position.x * 0.1);
+                    orbitalForce.multiplyScalar(0.002);
+                    particle.position.add(orbitalForce);
+                }
+
+                // Update material color based on proximity to others
+                let nearbyCount = 0;
+                particles.forEach((other, j) => {
+                    if (i !== j && particle.position.distanceTo(other.position) < 1.5) {
+                        nearbyCount++;
+                    }
+                });
+
+                const connectionIntensity = Math.min(nearbyCount / 5, 1);
+                const energyPulse = Math.sin(time * 2 + i * 0.1) * 0.1;
+                particle.material.color.setHSL(
+                    userData.baseHue + energyPulse,
+                    0.9,
+                    0.5 + connectionIntensity * 0.3 + pulse * 0.1
+                );
+            });
+
+            // Update connection lines
+            const positions = lines.geometry.attributes.position.array;
+            let lineIndex = 0;
+            
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const distance = particles[i].position.distanceTo(particles[j].position);
+                    
+                    if (distance < 2) {
+                        positions[lineIndex] = particles[i].position.x;
+                        positions[lineIndex + 1] = particles[i].position.y;
+                        positions[lineIndex + 2] = particles[i].position.z;
+                        positions[lineIndex + 3] = particles[j].position.x;
+                        positions[lineIndex + 4] = particles[j].position.y;
+                        positions[lineIndex + 5] = particles[j].position.z;
+                        lineIndex += 6;
+                    }
+                }
+            }
+            
+            lines.geometry.attributes.position.needsUpdate = true;
+            lines.geometry.setDrawRange(0, lineIndex / 3);
+
+            // Gentle camera movement
+            camera.position.x = Math.sin(time * 0.1) * 2;
+            camera.position.y = Math.cos(time * 0.15) * 1;
+            camera.lookAt(0, 0, 0);
+
+            // Update light colors for futuristic effect
+            pointLight.color.setHSL(0.5 + Math.sin(time * 0.2) * 0.1, 0.9, 0.6);
+            pointLight2.color.setHSL(0.75 + Math.cos(time * 0.15) * 0.1, 0.8, 0.5);
+
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>

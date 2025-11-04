@@ -1,0 +1,316 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 16mm; }
+  html, body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Noto Color Emoji"; }
+  h1 { font-size: 28px; margin: 0 0 8px; line-height: 1.1; }
+  .sub { font-size: 12px; opacity: .75; margin-bottom: 10px; }
+  .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 12px; }
+  .card { border: 1px solid #ddd; border-radius: 8px; padding: 10px; }
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .tile { border: 1px dashed #bbb; border-radius: 8px; padding: 8px; font-size: 11px; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th, td { border: 1px solid #e5e5e5; padding: 6px; vertical-align: top; }
+  .muted { opacity: .8; font-size: 10px; }
+  img { max-width: 100%; }
+  .avoid-break { break-inside: avoid; }
+  .full-width { grid-column: 1 / -1; }
+  .highlight { background: #f0f9ff; border-left: 3px solid #0ea5e9; padding: 8px; margin: 8px 0; }
+  code { background: #f5f5f5; padding: 2px 4px; border-radius: 3px; font-size: 10px; }
+  .badge { display: inline-block; background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold; }
+  .workflow-diagram { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px; border-radius: 8px; text-align: center; }
+  .step { display: inline-block; margin: 0 4px; }
+  .arrow { display: inline-block; margin: 0 2px; }
+  svg { max-width: 100%; height: auto; }
+  .icon-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0; }
+  .icon-item { text-align: center; padding: 8px; background: #f9fafb; border-radius: 6px; }
+  .icon-item svg { width: 32px; height: 32px; margin: 0 auto 4px; display: block; }
+</style>
+
+<h1>OPENAI AGENTKIT & CHATKIT CHEAT SHEET</h1>
+<div class="sub">Build, test, and deploy AI agents with OpenAI's latest tools — Launched Oct 2025 at DevDay</div>
+
+<div class="grid">
+  <div class="card avoid-break">
+    <h3>🚀 What is AgentKit?</h3>
+    <p style="font-size: 11px; margin: 8px 0;">OpenAI's complete suite for building AI agents, announced at DevDay 2025. Includes Agent Builder, ChatKit, and enhanced evaluation tools.</p>
+
+    <svg viewBox="0 0 300 140" style="margin: 12px 0;">
+      <!-- Main Container -->
+      <rect x="10" y="10" width="280" height="120" fill="#f0f9ff" stroke="#0ea5e9" stroke-width="2" rx="8"/>
+      <text x="150" y="30" text-anchor="middle" font-size="12" font-weight="bold" fill="#0369a1">AgentKit Suite</text>
+
+      <!-- Agent Builder Box -->
+      <rect x="25" y="45" width="80" height="70" fill="#10b981" opacity="0.2" stroke="#10b981" stroke-width="2" rx="6"/>
+      <text x="65" y="65" text-anchor="middle" font-size="20">🎨</text>
+      <text x="65" y="82" text-anchor="middle" font-size="10" font-weight="bold">Agent Builder</text>
+      <text x="65" y="95" text-anchor="middle" font-size="8" fill="#666">Drag & Drop</text>
+      <text x="65" y="105" text-anchor="middle" font-size="8" fill="#666">Visual Canvas</text>
+
+      <!-- ChatKit Box -->
+      <rect x="110" y="45" width="80" height="70" fill="#3b82f6" opacity="0.2" stroke="#3b82f6" stroke-width="2" rx="6"/>
+      <text x="150" y="65" text-anchor="middle" font-size="20">💬</text>
+      <text x="150" y="82" text-anchor="middle" font-size="10" font-weight="bold">ChatKit</text>
+      <text x="150" y="95" text-anchor="middle" font-size="8" fill="#666">Embeddable</text>
+      <text x="150" y="105" text-anchor="middle" font-size="8" fill="#666">Chat Interface</text>
+
+      <!-- Evals Box -->
+      <rect x="195" y="45" width="80" height="70" fill="#8b5cf6" opacity="0.2" stroke="#8b5cf6" stroke-width="2" rx="6"/>
+      <text x="235" y="65" text-anchor="middle" font-size="20">📊</text>
+      <text x="235" y="82" text-anchor="middle" font-size="10" font-weight="bold">Evals</text>
+      <text x="235" y="95" text-anchor="middle" font-size="8" fill="#666">Built-in</text>
+      <text x="235" y="105" text-anchor="middle" font-size="8" fill="#666">Evaluation</text>
+    </svg>
+
+    <p class="muted"><span class="badge">BETA</span> All tools included with standard API pricing</p>
+  </div>
+
+  <div class="card avoid-break">
+    <h3>🎯 Use Cases</h3>
+    <table>
+      <tr><th>Type</th><th>Examples</th></tr>
+      <tr><td>Internal Tools</td><td>Knowledge assistants, onboarding guides</td></tr>
+      <tr><td>Customer-Facing</td><td>Support agents, research assistants</td></tr>
+      <tr><td>Workflows</td><td>Custom business processes, automations</td></tr>
+      <tr><td>Integrations</td><td>Platform embeddings, API connections</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="card full-width avoid-break" style="margin-top:12px;">
+  <h3>🛠️ Agent Builder Features</h3>
+  <div class="row">
+    <div class="tile">
+      <strong>📐 Visual Canvas</strong><br>
+      Drag-and-drop nodes to compose agent logic without code
+    </div>
+    <div class="tile">
+      <strong>🔌 Tool Connections</strong><br>
+      Connect APIs, databases, and custom tools easily
+    </div>
+    <div class="tile">
+      <strong>🛡️ Custom Guardrails</strong><br>
+      Configure safety rules and constraints
+    </div>
+    <div class="tile">
+      <strong>▶️ Preview Runs</strong><br>
+      Test agents in real-time with live preview
+    </div>
+    <div class="tile">
+      <strong>📊 Inline Evals</strong><br>
+      Configure evaluations directly in builder
+    </div>
+    <div class="tile">
+      <strong>🔄 Full Versioning</strong><br>
+      Track changes and roll back easily
+    </div>
+  </div>
+</div>
+
+<div class="card full-width" style="margin-top:12px;">
+  <h3>💬 ChatKit Overview</h3>
+  <div class="grid">
+    <div>
+      <p style="font-size: 11px; margin: 8px 0;">A simple, embeddable chat interface for integrating AI agents into any application.</p>
+      <table>
+        <tr><th>Feature</th><th>Description</th></tr>
+        <tr><td>🎨 Customizable</td><td>Bring your own brand, styling, and workflows</td></tr>
+        <tr><td>🔗 Easy Embedding</td><td>Drop into websites, apps, or platforms</td></tr>
+        <tr><td>⚡ Ready to Use</td><td>Works out-of-the-box with OpenAI agents</td></tr>
+        <tr><td>🔧 Extensible</td><td>Advanced integrations via custom-chatkit API</td></tr>
+      </table>
+    </div>
+    <div>
+      <svg viewBox="0 0 300 160" style="margin: 8px 0;">
+        <!-- Title -->
+        <text x="150" y="15" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff">ChatKit Integration Architecture</text>
+
+        <!-- Background gradient -->
+        <defs>
+          <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <rect width="300" height="160" fill="url(#grad1)" rx="8"/>
+
+        <!-- Platform Icons Row -->
+        <circle cx="40" cy="50" r="18" fill="#fff" opacity="0.2"/>
+        <text x="40" y="55" text-anchor="middle" font-size="16">🌐</text>
+        <text x="40" y="75" text-anchor="middle" font-size="8" fill="#fff">Website</text>
+
+        <circle cx="100" cy="50" r="18" fill="#fff" opacity="0.2"/>
+        <text x="100" y="55" text-anchor="middle" font-size="16">📱</text>
+        <text x="100" y="75" text-anchor="middle" font-size="8" fill="#fff">App</text>
+
+        <circle cx="160" cy="50" r="18" fill="#fff" opacity="0.2"/>
+        <text x="160" y="55" text-anchor="middle" font-size="16">💼</text>
+        <text x="160" y="75" text-anchor="middle" font-size="8" fill="#fff">Platform</text>
+
+        <!-- Arrows Down -->
+        <path d="M 70 80 L 130 95" stroke="#fff" stroke-width="2" opacity="0.6" marker-end="url(#whitearrow)"/>
+        <path d="M 100 80 L 140 95" stroke="#fff" stroke-width="2" opacity="0.6" marker-end="url(#whitearrow)"/>
+        <path d="M 160 75 L 155 95" stroke="#fff" stroke-width="2" opacity="0.6" marker-end="url(#whitearrow)"/>
+
+        <!-- ChatKit Box -->
+        <rect x="105" y="95" width="90" height="30" fill="#fff" opacity="0.3" stroke="#fff" stroke-width="2" rx="6"/>
+        <text x="150" y="108" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">💬 ChatKit UI</text>
+        <text x="150" y="120" text-anchor="middle" font-size="8" fill="#fff">Embeddable Interface</text>
+
+        <!-- Arrow to Agent -->
+        <path d="M 150 125 L 150 135" stroke="#fff" stroke-width="2" marker-end="url(#whitearrow)"/>
+
+        <!-- Agent Box -->
+        <rect x="95" y="135" width="110" height="20" fill="#10b981" stroke="#fff" stroke-width="2" rx="6"/>
+        <text x="150" y="149" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">🤖 OpenAI Agent</text>
+
+        <defs>
+          <marker id="whitearrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#fff" opacity="0.8"/>
+          </marker>
+        </defs>
+      </svg>
+      <div class="highlight" style="margin-top: 12px;">
+        <strong>Quick Start:</strong>
+        <ol style="font-size: 10px; margin: 4px 0; padding-left: 20px;">
+          <li>Create agent in Agent Builder</li>
+          <li>Get ChatKit embed code</li>
+          <li>Customize styling & branding</li>
+          <li>Deploy to your platform</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="grid" style="margin-top:12px;">
+  <div class="card avoid-break">
+    <h3>🏗️ Building Agents Workflow</h3>
+    <svg viewBox="0 0 400 200" style="margin: 8px 0;">
+      <!-- Design -->
+      <circle cx="60" cy="40" r="25" fill="#10b981" opacity="0.2"/>
+      <text x="60" y="35" text-anchor="middle" font-size="20" fill="#10b981">📝</text>
+      <text x="60" y="70" text-anchor="middle" font-size="10" font-weight="bold">Design</text>
+
+      <!-- Configure -->
+      <circle cx="160" cy="40" r="25" fill="#3b82f6" opacity="0.2"/>
+      <text x="160" y="35" text-anchor="middle" font-size="20" fill="#3b82f6">⚙️</text>
+      <text x="160" y="70" text-anchor="middle" font-size="10" font-weight="bold">Configure</text>
+
+      <!-- Test -->
+      <circle cx="260" cy="40" r="25" fill="#8b5cf6" opacity="0.2"/>
+      <text x="260" y="35" text-anchor="middle" font-size="20" fill="#8b5cf6">🧪</text>
+      <text x="260" y="70" text-anchor="middle" font-size="10" font-weight="bold">Test</text>
+
+      <!-- Evaluate -->
+      <circle cx="60" cy="130" r="25" fill="#f59e0b" opacity="0.2"/>
+      <text x="60" y="125" text-anchor="middle" font-size="20" fill="#f59e0b">📊</text>
+      <text x="60" y="160" text-anchor="middle" font-size="10" font-weight="bold">Evaluate</text>
+
+      <!-- Version -->
+      <circle cx="160" cy="130" r="25" fill="#ec4899" opacity="0.2"/>
+      <text x="160" y="125" text-anchor="middle" font-size="20" fill="#ec4899">🔄</text>
+      <text x="160" y="160" text-anchor="middle" font-size="10" font-weight="bold">Version</text>
+
+      <!-- Deploy -->
+      <circle cx="260" cy="130" r="25" fill="#14b8a6" opacity="0.2"/>
+      <text x="260" y="125" text-anchor="middle" font-size="20" fill="#14b8a6">🚀</text>
+      <text x="260" y="160" text-anchor="middle" font-size="10" font-weight="bold">Deploy</text>
+
+      <!-- Arrows -->
+      <path d="M 85 40 L 135 40" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)" fill="none"/>
+      <path d="M 185 40 L 235 40" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)" fill="none"/>
+      <path d="M 260 65 L 260 105" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)" fill="none"/>
+      <path d="M 235 130 L 185 130" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)" fill="none"/>
+      <path d="M 135 130 L 85 130" stroke="#666" stroke-width="2" marker-end="url(#arrowhead)" fill="none"/>
+      <path d="M 60 105 L 60 65" stroke="#666" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrowhead)" fill="none"/>
+
+      <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <polygon points="0 0, 10 3, 0 6" fill="#666"/>
+        </marker>
+      </defs>
+    </svg>
+    <table style="margin-top: 8px;">
+      <tr><th>Step</th><th>Action</th></tr>
+      <tr><td>1. Design</td><td>Start with blank canvas or template</td></tr>
+      <tr><td>2. Configure</td><td>Add nodes, connect tools, set guardrails</td></tr>
+      <tr><td>3. Test</td><td>Run preview tests with sample inputs</td></tr>
+      <tr><td>4. Evaluate</td><td>Set up inline evals for quality checks</td></tr>
+      <tr><td>5. Version</td><td>Save version and track changes</td></tr>
+      <tr><td>6. Deploy</td><td>Push to production via API or ChatKit</td></tr>
+    </table>
+  </div>
+
+  <div class="card avoid-break">
+    <h3>📚 Key Resources</h3>
+    <table>
+      <tr><th>Resource</th><th>Link</th></tr>
+      <tr><td>Agent Builder Guide</td><td><code>platform.openai.com/docs/guides/agents/agent-builder</code></td></tr>
+      <tr><td>ChatKit Docs</td><td><code>platform.openai.com/docs/guides/chatkit</code></td></tr>
+      <tr><td>Advanced ChatKit</td><td><code>platform.openai.com/docs/guides/custom-chatkit</code></td></tr>
+      <tr><td>Building Agents Track</td><td><code>developers.openai.com/tracks/building-agents/</code></td></tr>
+      <tr><td>Practical Guide PDF</td><td><code>cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf</code></td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="card full-width avoid-break" style="margin-top:12px;">
+  <h3>✨ Best Practices</h3>
+  <div class="row">
+    <div class="tile">
+      <strong>Start Simple</strong><br>
+      Begin with prebuilt templates, then customize as you learn
+    </div>
+    <div class="tile">
+      <strong>Test Early</strong><br>
+      Use preview runs frequently during development
+    </div>
+    <div class="tile">
+      <strong>Set Guardrails</strong><br>
+      Configure safety rules before deployment
+    </div>
+    <div class="tile">
+      <strong>Version Control</strong><br>
+      Save versions at key milestones for easy rollback
+    </div>
+    <div class="tile">
+      <strong>Evaluate Continuously</strong><br>
+      Use inline evals to catch issues early
+    </div>
+    <div class="tile">
+      <strong>Iterate Fast</strong><br>
+      Leverage visual canvas for rapid prototyping
+    </div>
+  </div>
+</div>
+
+<div class="card full-width" style="margin-top:12px;">
+  <h3>🎓 Quick Reference</h3>
+  <div class="grid">
+    <div>
+      <strong style="font-size: 11px;">Agent Builder Templates:</strong>
+      <ul style="font-size: 10px; margin: 4px 0; padding-left: 20px;">
+        <li>Customer Support Agent</li>
+        <li>Knowledge Base Assistant</li>
+        <li>Research & Analysis Agent</li>
+        <li>Workflow Automation</li>
+        <li>Custom Integration Agent</li>
+      </ul>
+    </div>
+    <div>
+      <strong style="font-size: 11px;">ChatKit Customization Options:</strong>
+      <ul style="font-size: 10px; margin: 4px 0; padding-left: 20px;">
+        <li>Brand colors & logos</li>
+        <li>Custom CSS styling</li>
+        <li>Welcome messages</li>
+        <li>Suggested prompts</li>
+        <li>File upload settings</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="muted" style="text-align: center; margin-top: 16px; padding-top: 12px; border-top: 1px solid #e5e5e5;">
+  OpenAI AgentKit & ChatKit Cheat Sheet | Launched October 2025 | All tools included with standard API pricing
+</div>

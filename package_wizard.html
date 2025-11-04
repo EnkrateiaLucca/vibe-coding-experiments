@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Package Wizard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            display: flex;
+            gap: 30px;
+        }
+        .form-section {
+            flex: 1;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .preview-section {
+            flex: 1;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .dependency-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .dependency-item input {
+            flex: 1;
+        }
+        .remove-btn {
+            background-color: #e74c3c;
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+        pre {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .build-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .console {
+            background-color: #000;
+            color: #0f0;
+            font-family: monospace;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            min-height: 150px;
+            overflow-y: auto;
+            display: none;
+        }
+        .console p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Python Package Wizard</h1>
+    
+    <div class="container">
+        <div class="form-section">
+            <h2>Package Information</h2>
+            
+            <div class="form-group">
+                <label for="package-name">Package Name:</label>
+                <input type="text" id="package-name" placeholder="my_awesome_package" value="my_package">
+            </div>
+            
+            <div class="form-group">
+                <label for="version">Version:</label>
+                <input type="text" id="version" placeholder="0.1.0" value="0.1.0">
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea id="description" placeholder="A brief description of your package">A simple Python package</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="author">Author:</label>
+                <input type="text" id="author" placeholder="Your Name">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Author Email:</label>
+                <input type="email" id="email" placeholder="your.email@example.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="license">License:</label>
+                <input type="text" id="license" placeholder="MIT" value="MIT">
+            </div>
+            
+            <div class="form-group">
+                <label>Dependencies:</label>
+                <div id="dependencies-container">
+                    <div class="dependency-item">
+                        <input type="text" class="dependency" placeholder="package_name>=1.0.0">
+                        <button class="remove-btn">Remove</button>
+                    </div>
+                </div>
+                <button id="add-dependency">Add Dependency</button>
+            </div>
+            
+            <div class="form-group">
+                <label for="python-requires">Python Requires:</label>
+                <input type="text" id="python-requires" placeholder=">=3.7" value=">=3.7">
+            </div>
+        </div>
+        
+        <div class="preview-section">
+            <h2>pyproject.toml Preview</h2>
+            <pre id="preview"></pre>
+            
+            <div class="build-section">
+                <button id="build-package">Build Package</button>
+                <div class="console" id="console"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Get all form elements
+        const packageNameInput = document.getElementById('package-name');
+        const versionInput = document.getElementById('version');
+        const descriptionInput = document.getElementById('description');
+        const authorInput = document.getElementById('author');
+        const emailInput = document.getElementById('email');
+        const licenseInput = document.getElementById('license');
+        const pythonRequiresInput = document.getElementById('python-requires');
+        const dependenciesContainer = document.getElementById('dependencies-container');
+        const addDependencyBtn = document.getElementById('add-dependency');
+        const previewElement = document.getElementById('preview');
+        const buildPackageBtn = document.getElementById('build-package');
+        const consoleElement = document.getElementById('console');
+        
+        // Add event listeners to all form elements
+        const formElements = [
+            packageNameInput, versionInput, descriptionInput, 
+            authorInput, emailInput, licenseInput, pythonRequiresInput
+        ];
+        
+        formElements.forEach(element => {
+            element.addEventListener('input', updatePreview);
+        });
+        
+        // Add dependency button
+        addDependencyBtn.addEventListener('click', () => {
+            const newDependency = document.createElement('div');
+            newDependency.className = 'dependency-item';
+            newDependency.innerHTML = `
+                <input type="text" class="dependency" placeholder="package_name>=1.0.0">
+                <button class="remove-btn">Remove</button>
+            `;
+            dependenciesContainer.appendChild(newDependency);
+            
+            // Add event listener to the new input
+            newDependency.querySelector('.dependency').addEventListener('input', updatePreview);
+            
+            // Add event listener to the remove button
+            newDependency.querySelector('.remove-btn').addEventListener('click', function() {
+                dependenciesContainer.removeChild(newDependency);
+                updatePreview();
+            });
+            
+            updatePreview();
+        });
+        
+        // Add event listener to the initial remove button
+        document.querySelector('.remove-btn').addEventListener('click', function() {
+            this.parentElement.querySelector('.dependency').value = '';
+            updatePreview();
+        });
+        
+        // Add event listener to the initial dependency input
+        document.querySelector('.dependency').addEventListener('input', updatePreview);
+        
+        // Build package button
+        buildPackageBtn.addEventListener('click', simulateBuild);
+        
+        // Update preview function
+        function updatePreview() {
+            const packageName = packageNameInput.value || 'my_package';
+            const version = versionInput.value || '0.1.0';
+            const description = descriptionInput.value || '';
+            const author = authorInput.value || '';
+            const email = emailInput.value || '';
+            const license = licenseInput.value || 'MIT';
+            const pythonRequires = pythonRequiresInput.value || '>=3.7';
+            
+            // Get dependencies
+            const dependencies = [];
+            document.querySelectorAll('.dependency').forEach(dep => {
+                if (dep.value.trim()) {
+                    dependencies.push(`"${dep.value.trim()}"`);
+                }
+            });
+            
+            // Create pyproject.toml content
+            const pyprojectToml = `[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "${packageName}"
+version = "${version}"
+description = "${description}"
+authors = [
+    {name = "${author}", email = "${email}"}
+]
+license = {text = "${license}"}
+requires-python = "${pythonRequires}"
+dependencies = [
+    ${dependencies.join(',\n    ')}
+]
+
+[project.urls]
+"Homepage" = "https://github.com/username/${packageName}"
+"Bug Tracker" = "https://github.com/username/${packageName}/issues"
+
+[tool.setuptools]
+packages = ["${packageName}"]
+`;
+            
+            // Update preview
+            previewElement.textContent = pyprojectToml;
+        }
+        
+        // Simulate build function
+        function simulateBuild() {
+            const packageName = packageNameInput.value || 'my_package';
+            
+            // Show console
+            consoleElement.style.display = 'block';
+            consoleElement.innerHTML = '';
+            
+            // Simulate build process with typing effect
+            const steps = [
+                `$ python -m build`,
+                `* Creating virtualenv isolated environment...`,
+                `* Installing packages: setuptools>=42, wheel`,
+                `* Getting dependencies for sdist...`,
+                `* Building sdist...`,
+                `* Building wheel from sdist`,
+                `Successfully built ${packageName}-${versionInput.value}.tar.gz and ${packageName}-${versionInput.value}-py3-none-any.whl`,
+                ``,
+                `$ ls dist/`,
+                `${packageName}-${versionInput.value}.tar.gz`,
+                `${packageName}-${versionInput.value}-py3-none-any.whl`,
+                ``,
+                `Package built successfully! 🎉`,
+                `To install: pip install dist/${packageName}-${versionInput.value}-py3-none-any.whl`,
+                `To upload to PyPI: python -m twine upload dist/*`
+            ];
+            
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i < steps.length) {
+                    const p = document.createElement('p');
+                    p.textContent = steps[i];
+                    consoleElement.appendChild(p);
+                    consoleElement.scrollTop = consoleElement.scrollHeight;
+                    i++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 500);
+        }
+        
+        // Initialize preview
+        updatePreview();
+    </script>
+</body>
+</html>

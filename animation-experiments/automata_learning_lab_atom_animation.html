@@ -1,0 +1,313 @@
+<!--
+RECONSTRUCTED PROMPT:
+Create a cool three.js animation that works like a logo for my YouTube channel "Automata Learning Lab". 
+The animation should feature:
+- A futuristic, tech-focused aesthetic with cyan and orange colors
+- A central rotating icosahedron (representing computational complexity)
+- Orbiting rings and nodes to represent automata states and transitions
+- Interactive mouse controls for rotation
+- Smooth animations with pulsing effects
+- Professional typography with the channel name
+- Dark gradient background suitable for a tech channel
+- Wireframe overlay effects for a high-tech look
+- Floating/breathing motion for dynamic appeal
+The overall feel should be sophisticated, mathematical, and convey the concept of learning about automata theory and computational systems.
+-->
+
+<!-- generate a cool threejs animation that works like a logo for my youtube channel automata learning lab -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automata Learning Lab</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a;
+            overflow: hidden;
+            font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', sans-serif;
+        }
+        
+        #container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        #logo-text {
+            position: absolute;
+            bottom: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffffff;
+            font-size: 2.5rem;
+            font-weight: 300;
+            letter-spacing: 0.3em;
+            text-align: center;
+            text-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+            opacity: 0;
+            animation: fadeInText 2s ease-in-out 1s forwards;
+        }
+        
+        @keyframes fadeInText {
+            to {
+                opacity: 1;
+            }
+        }
+        
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #444;
+            font-size: 12px;
+            font-weight: 300;
+            letter-spacing: 0.1em;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="logo-text">
+            AUTOMATA<br>
+            <span style="font-size: 0.7em; color: #888; font-weight: 200;">LEARNING LAB</span>
+        </div>
+        <div id="info">Click and drag to rotate</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x000000, 0);
+        document.getElementById('container').appendChild(renderer.domElement);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        directionalLight.position.set(5, 5, 5);
+        scene.add(directionalLight);
+
+        const keyLight = new THREE.PointLight(0xffffff, 0.6, 100);
+        keyLight.position.set(-5, 5, 3);
+        scene.add(keyLight);
+
+        // Materials - minimalist tech aesthetic
+        const whiteMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0xffffff,
+            metalness: 0.9,
+            roughness: 0.1,
+            clearcoat: 1.0,
+            reflectivity: 1.0
+        });
+
+        const lineMaterial = new THREE.LineBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.3
+        });
+
+        // Create main group
+        const logoGroup = new THREE.Group();
+        const robotGroup = new THREE.Group();
+
+        // CUTE ROBOT CONSTRUCTION
+        const eyeMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0xffffff,
+            emissive: 0xffffff,
+            emissiveIntensity: 0.5,
+            metalness: 0.3,
+            roughness: 0.1
+        });
+
+        // Head - rounded box
+        const headGeometry = new THREE.BoxGeometry(1, 1, 0.8);
+        const head = new THREE.Mesh(headGeometry, whiteMaterial);
+        head.position.y = 0.8;
+        robotGroup.add(head);
+
+        // Eyes
+        const eyeGeometry = new THREE.SphereGeometry(0.12, 16, 16);
+        const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+        leftEye.position.set(-0.25, 0.9, 0.45);
+        robotGroup.add(leftEye);
+
+        const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+        rightEye.position.set(0.25, 0.9, 0.45);
+        robotGroup.add(rightEye);
+
+        // Antenna
+        const antennaGeometry = new THREE.CylinderGeometry(0.03, 0.03, 0.5);
+        const antenna = new THREE.Mesh(antennaGeometry, whiteMaterial);
+        antenna.position.y = 1.55;
+        robotGroup.add(antenna);
+
+        const antennaBall = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 16), eyeMaterial);
+        antennaBall.position.y = 1.85;
+        robotGroup.add(antennaBall);
+
+        // Body
+        const bodyGeometry = new THREE.BoxGeometry(1.2, 1.3, 0.9);
+        const body = new THREE.Mesh(bodyGeometry, whiteMaterial);
+        body.position.y = -0.4;
+        robotGroup.add(body);
+
+        // Chest panel
+        const panelGeometry = new THREE.BoxGeometry(0.7, 0.8, 0.05);
+        const panel = new THREE.Mesh(panelGeometry, eyeMaterial);
+        panel.position.set(0, -0.3, 0.48);
+        robotGroup.add(panel);
+
+        // Arms
+        const armGeometry = new THREE.CylinderGeometry(0.12, 0.12, 1);
+        const leftArm = new THREE.Mesh(armGeometry, whiteMaterial);
+        leftArm.position.set(-0.7, -0.2, 0);
+        leftArm.rotation.z = Math.PI / 6;
+        robotGroup.add(leftArm);
+
+        const rightArm = new THREE.Mesh(armGeometry, whiteMaterial);
+        rightArm.position.set(0.7, -0.2, 0);
+        rightArm.rotation.z = -Math.PI / 6;
+        robotGroup.add(rightArm);
+
+        // Hands
+        const handGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+        const leftHand = new THREE.Mesh(handGeometry, eyeMaterial);
+        leftHand.position.set(-0.95, -0.7, 0);
+        robotGroup.add(leftHand);
+
+        const rightHand = new THREE.Mesh(handGeometry, eyeMaterial);
+        rightHand.position.set(0.95, -0.7, 0);
+        robotGroup.add(rightHand);
+
+        // Legs
+        const legGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.8);
+        const leftLeg = new THREE.Mesh(legGeometry, whiteMaterial);
+        leftLeg.position.set(-0.3, -1.35, 0);
+        robotGroup.add(leftLeg);
+
+        const rightLeg = new THREE.Mesh(legGeometry, whiteMaterial);
+        rightLeg.position.set(0.3, -1.35, 0);
+        robotGroup.add(rightLeg);
+
+        // Feet
+        const footGeometry = new THREE.BoxGeometry(0.25, 0.15, 0.35);
+        const leftFoot = new THREE.Mesh(footGeometry, eyeMaterial);
+        leftFoot.position.set(-0.3, -1.8, 0.05);
+        robotGroup.add(leftFoot);
+
+        const rightFoot = new THREE.Mesh(footGeometry, eyeMaterial);
+        rightFoot.position.set(0.3, -1.8, 0.05);
+        robotGroup.add(rightFoot);
+
+        logoGroup.add(robotGroup);
+
+        // Tech particle field
+        const particles = [];
+        const numParticles = 40;
+
+        for (let i = 0; i < numParticles; i++) {
+            const phi = Math.acos(-1 + (2 * i) / numParticles);
+            const theta = Math.sqrt(numParticles * Math.PI) * phi;
+            const radius = 3 + Math.random() * 1;
+
+            const particleGeometry = new THREE.SphereGeometry(0.03, 8, 8);
+            const particle = new THREE.Mesh(particleGeometry, eyeMaterial);
+
+            particle.position.x = radius * Math.cos(theta) * Math.sin(phi);
+            particle.position.y = radius * Math.sin(theta) * Math.sin(phi);
+            particle.position.z = radius * Math.cos(phi);
+
+            particles.push({ mesh: particle, basePos: particle.position.clone(), index: i });
+            logoGroup.add(particle);
+        }
+
+        scene.add(logoGroup);
+        camera.position.z = 8;
+
+        // Mouse interaction
+        let mouseX = 0, mouseY = 0;
+        let targetRotationX = 0, targetRotationY = 0;
+
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+            targetRotationX = mouseY * 0.3;
+            targetRotationY = mouseX * 0.3;
+        });
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const time = Date.now() * 0.001;
+
+            // Robot gentle rotation
+            robotGroup.rotation.y = Math.sin(time * 0.5) * 0.3;
+
+            // Robot bounce
+            robotGroup.position.y = Math.sin(time * 2) * 0.15;
+
+            // Antenna wobble
+            antennaBall.position.y = 1.85 + Math.sin(time * 4) * 0.1;
+
+            // Eye blink effect
+            const blinkTime = time % 3;
+            if (blinkTime > 2.8) {
+                const blinkScale = Math.max(0, (3 - blinkTime) * 5);
+                leftEye.scale.y = blinkScale;
+                rightEye.scale.y = blinkScale;
+            } else {
+                leftEye.scale.y = 1;
+                rightEye.scale.y = 1;
+            }
+
+            // Arm wave
+            leftArm.rotation.z = Math.PI / 6 + Math.sin(time * 3) * 0.2;
+            rightArm.rotation.z = -Math.PI / 6 - Math.sin(time * 3 + 1) * 0.2;
+
+            // Particle field animation
+            particles.forEach((particleData) => {
+                const { mesh, basePos, index } = particleData;
+                const orbit = Math.sin(time + index * 0.3) * 0.2;
+
+                mesh.position.x = basePos.x + orbit;
+                mesh.position.y = basePos.y + Math.cos(time * 1.5 + index * 0.4) * 0.2;
+                mesh.position.z = basePos.z + Math.sin(time * 2 + index) * 0.2;
+
+                // Twinkle effect
+                mesh.scale.setScalar(0.5 + Math.sin(time * 5 + index) * 0.5);
+            });
+
+            // Smooth mouse interaction
+            logoGroup.rotation.x += (targetRotationX - logoGroup.rotation.x) * 0.05;
+            logoGroup.rotation.y += (targetRotationY - logoGroup.rotation.y) * 0.05;
+
+            // Floating effect
+            logoGroup.position.y = Math.sin(time * 0.8) * 0.2;
+
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Start animation
+        animate();
+    </script>
+</body>
+</html>

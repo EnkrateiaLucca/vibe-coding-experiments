@@ -1,0 +1,113 @@
+<!--
+RECONSTRUCTED PROMPT:
+Create a three.js visualization that represents friendship through two orbiting spheres connected by a line. The animation should feature:
+- Two spheres (one orange, one light blue) representing friends
+- Spheres orbit in a circular pattern opposite each other
+- A connecting line between the spheres that updates dynamically
+- Trail effects that show the path each sphere has traveled
+- Standard materials with emissive properties for glow
+- Clean, minimal aesthetic with a dark radial gradient background
+- Smooth orbital motion at a comfortable pace
+- Window resize handling for responsiveness
+- Title "Orbiting Souls - Friendship Visualization"
+The visualization should symbolize how true friendship maintains connection even when people are in different places or phases of life.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Orbiting Souls - Friendship Visualization</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: radial-gradient(ellipse at center, #0d1b2a, #000); }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+
+    const pointLight = new THREE.PointLight(0xffffff, 1);
+    pointLight.position.set(0, 10, 25);
+    scene.add(pointLight);
+
+    // Spheres
+    const sphereGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+    const material1 = new THREE.MeshStandardMaterial({ color: 0xffa500, emissive: 0xffa500 });
+    const material2 = new THREE.MeshStandardMaterial({ color: 0x87cefa, emissive: 0x87cefa });
+    const sphere1 = new THREE.Mesh(sphereGeometry, material1);
+    const sphere2 = new THREE.Mesh(sphereGeometry, material2);
+    scene.add(sphere1);
+    scene.add(sphere2);
+
+    // Line connection
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 0.5, transparent: true });
+    const lineGeometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+    const line = new THREE.Line(lineGeometry, lineMaterial);
+    scene.add(line);
+
+    // Trails
+    const trail1 = [];
+    const trail2 = [];
+    const trailMaterial1 = new THREE.LineBasicMaterial({ color: 0xffa500 });
+    const trailMaterial2 = new THREE.LineBasicMaterial({ color: 0x87cefa });
+
+    function createTrail(trail, material) {
+      const geometry = new THREE.BufferGeometry().setFromPoints(trail);
+      return new THREE.Line(geometry, material);
+    }
+
+    camera.position.z = 10;
+
+    let time = 0;
+    function animate() {
+      requestAnimationFrame(animate);
+
+      time += 0.01;
+      const radius = 3;
+
+      sphere1.position.x = radius * Math.cos(time);
+      sphere1.position.y = radius * Math.sin(time);
+
+      sphere2.position.x = radius * Math.cos(time + Math.PI);
+      sphere2.position.y = radius * Math.sin(time + Math.PI);
+
+      // Update line
+      line.geometry.setFromPoints([sphere1.position, sphere2.position]);
+
+      // Update trails
+      trail1.push(sphere1.position.clone());
+      trail2.push(sphere2.position.clone());
+      if (trail1.length > 100) trail1.shift();
+      if (trail2.length > 100) trail2.shift();
+
+      scene.children = scene.children.filter(obj => obj.name !== 'trail');
+      const trailMesh1 = createTrail(trail1, trailMaterial1);
+      trailMesh1.name = 'trail';
+      scene.add(trailMesh1);
+      const trailMesh2 = createTrail(trail2, trailMaterial2);
+      trailMesh2.name = 'trail';
+      scene.add(trailMesh2);
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,792 @@
+<!--
+RECONSTRUCTED PROMPT:
+Create a sophisticated reaction time game called "Neural Reflex" with a consciousness/brain training theme. The game should include:
+
+VISUAL DESIGN:
+- Dark futuristic background with neural network visualization
+- Animated neurons and synapses in the background
+- Glowing consciousness field in the center
+- Custom cursor with pulsing effects
+- Cyberpunk color scheme (cyan, purple, magenta)
+
+GAMEPLAY MECHANICS:
+- Targets spawn at random locations with different types:
+  - Normal targets (standard points)
+  - Critical targets (high points, red, pulsing)
+  - Bonus targets (medium points, green, shimmering)  
+  - Phantom targets (penalty, translucent, should not be clicked)
+- Reaction time measurement and scoring system
+- Consciousness meter that depletes over time and with missed targets
+- Streak system for consecutive perfect hits (under 300ms)
+- Progressive difficulty with faster spawn rates
+- Level progression based on score
+
+UI ELEMENTS:
+- Stats panel showing score, average reaction time, level, consciousness %
+- Reaction time meter with gradient fill
+- Streak indicator for perfect streaks
+- Start screen with "Enter the Flow State" button
+- Game over screen with performance analysis
+- Neural wave effects when targets spawn
+- Particle explosion feedback on hits
+
+INTERACTIONS:
+- Mouse tracking with custom cursor
+- Clicking reduces consciousness (penalty for random clicking)
+- Space bar to start from start screen
+- Escape key to end game early
+- Keyboard controls for accessibility
+
+The game should feel like training your brain's neural pathways and achieving a transcendent state of consciousness through quick reactions.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Reflex - Consciousness Reaction Trainer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0f2e 35%, #2d1b69 100%);
+            font-family: 'Courier New', monospace;
+            cursor: none;
+            user-select: none;
+        }
+
+        .neural-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .neuron {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #00ffff;
+            border-radius: 50%;
+            animation: pulse-neuron 2s infinite ease-in-out;
+        }
+
+        .synapse {
+            position: absolute;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #00ffff, transparent);
+            animation: synapse-fire 3s infinite ease-in-out;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+        }
+
+        .consciousness-field {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 50%;
+            background: radial-gradient(circle at center, rgba(0, 255, 255, 0.05) 0%, transparent 70%);
+            animation: consciousness-pulse 4s infinite ease-in-out;
+        }
+
+        .reaction-target {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, #ff0080 0%, #8000ff 50%, #0080ff 100%);
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.8);
+            transform: scale(0);
+            animation: target-spawn 0.3s ease-out forwards;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(255, 0, 128, 0.7);
+        }
+
+        .reaction-target.critical {
+            background: radial-gradient(circle, #ff4500 0%, #ff0000 50%, #8b0000 100%);
+            animation: critical-pulse 0.5s infinite ease-in-out;
+            box-shadow: 0 0 50px rgba(255, 69, 0, 0.9);
+        }
+
+        .reaction-target.bonus {
+            background: radial-gradient(circle, #00ff00 0%, #32cd32 50%, #228b22 100%);
+            animation: bonus-shimmer 1s infinite ease-in-out;
+            box-shadow: 0 0 40px rgba(0, 255, 0, 0.8);
+        }
+
+        .reaction-target.phantom {
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%);
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .feedback-explosion {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .feedback-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #00ffff;
+            border-radius: 50%;
+        }
+
+        .ui-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .stats-panel {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            color: #00ffff;
+            font-size: 18px;
+            text-shadow: 0 0 10px #00ffff;
+            pointer-events: auto;
+        }
+
+        .reaction-meter {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            width: 200px;
+            height: 20px;
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .reaction-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0080, #8000ff, #0080ff);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 8px;
+        }
+
+        .start-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #00ffff;
+            pointer-events: auto;
+        }
+
+        .title {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #00ffff;
+            animation: title-glow 2s infinite ease-in-out;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 40px;
+            opacity: 0.8;
+            animation: subtitle-fade 3s infinite ease-in-out;
+        }
+
+        .start-button {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            background: linear-gradient(45deg, #ff0080, #8000ff);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 20px rgba(255, 0, 128, 0.5);
+        }
+
+        .start-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(255, 0, 128, 0.8);
+        }
+
+        .game-over-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #00ffff;
+            pointer-events: auto;
+            display: none;
+        }
+
+        .final-score {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #00ffff;
+        }
+
+        .performance-analysis {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .consciousness-cursor {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle, rgba(0, 255, 255, 0.8) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            animation: cursor-pulse 1s infinite ease-in-out;
+        }
+
+        .neural-wave {
+            position: absolute;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: neural-wave-expand 2s infinite ease-out;
+        }
+
+        .focus-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            animation: focus-breathe 2s infinite ease-in-out;
+        }
+
+        .streak-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00ff00;
+            font-size: 1.5rem;
+            text-shadow: 0 0 15px #00ff00;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        @keyframes pulse-neuron {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); }
+        }
+
+        @keyframes synapse-fire {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        @keyframes consciousness-pulse {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.05); opacity: 0.6; }
+        }
+
+        @keyframes target-spawn {
+            0% { transform: scale(0) rotate(0deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(180deg); opacity: 0.8; }
+            100% { transform: scale(1) rotate(360deg); opacity: 1; }
+        }
+
+        @keyframes critical-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes bonus-shimmer {
+            0%, 100% { filter: brightness(1) hue-rotate(0deg); }
+            50% { filter: brightness(1.3) hue-rotate(60deg); }
+        }
+
+        @keyframes title-glow {
+            0%, 100% { text-shadow: 0 0 20px #00ffff; }
+            50% { text-shadow: 0 0 40px #00ffff, 0 0 60px #ff0080; }
+        }
+
+        @keyframes subtitle-fade {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 0.4; }
+        }
+
+        @keyframes cursor-pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+
+        @keyframes neural-wave-expand {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
+        }
+
+        @keyframes focus-breathe {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.8; }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="neural-background" id="neural-background"></div>
+    <div class="consciousness-cursor" id="cursor"></div>
+
+    <div class="game-container">
+        <div class="consciousness-field"></div>
+        <div class="focus-indicator" id="focus-indicator"></div>
+        
+        <div class="start-screen" id="start-screen">
+            <h1 class="title">NEURAL REFLEX</h1>
+            <p class="subtitle">Train your consciousness • Transcend reaction time</p>
+            <button class="start-button" onclick="startGame()">Enter the Flow State</button>
+        </div>
+
+        <div class="game-over-screen" id="game-over-screen">
+            <div class="final-score" id="final-score">0</div>
+            <div class="performance-analysis" id="performance-analysis"></div>
+            <button class="start-button" onclick="restartGame()">Evolve Further</button>
+        </div>
+    </div>
+
+    <div class="ui-overlay">
+        <div class="stats-panel" id="stats-panel">
+            <div>Score: <span id="score">0</span></div>
+            <div>Avg Reaction: <span id="avg-reaction">0ms</span></div>
+            <div>Level: <span id="level">1</span></div>
+            <div>Consciousness: <span id="consciousness">100%</span></div>
+        </div>
+        
+        <div class="reaction-meter">
+            <div class="reaction-fill" id="reaction-fill"></div>
+        </div>
+        
+        <div class="streak-indicator" id="streak-indicator">Perfect Streak: 0</div>
+    </div>
+
+    <script>
+        class NeuralReflexGame {
+            constructor() {
+                this.gameState = 'start';
+                this.score = 0;
+                this.level = 1;
+                this.consciousness = 100;
+                this.streak = 0;
+                this.maxStreak = 0;
+                this.reactionTimes = [];
+                this.activeTargets = [];
+                this.spawnTimer = null;
+                this.baseSpawnRate = 2000;
+                this.difficultyMultiplier = 1;
+                this.perfectThreshold = 300;
+                this.targetLifetime = 3000;
+                
+                this.initializeNeuralBackground();
+                this.bindEvents();
+                this.updateCursor();
+            }
+
+            initializeNeuralBackground() {
+                const background = document.getElementById('neural-background');
+                
+                for (let i = 0; i < 50; i++) {
+                    const neuron = document.createElement('div');
+                    neuron.className = 'neuron';
+                    neuron.style.left = Math.random() * window.innerWidth + 'px';
+                    neuron.style.top = Math.random() * window.innerHeight + 'px';
+                    neuron.style.animationDelay = Math.random() * 2 + 's';
+                    background.appendChild(neuron);
+                }
+
+                for (let i = 0; i < 30; i++) {
+                    const synapse = document.createElement('div');
+                    synapse.className = 'synapse';
+                    const length = 50 + Math.random() * 200;
+                    const angle = Math.random() * 360;
+                    synapse.style.width = length + 'px';
+                    synapse.style.left = Math.random() * window.innerWidth + 'px';
+                    synapse.style.top = Math.random() * window.innerHeight + 'px';
+                    synapse.style.transform = `rotate(${angle}deg)`;
+                    synapse.style.animationDelay = Math.random() * 3 + 's';
+                    background.appendChild(synapse);
+                }
+            }
+
+            bindEvents() {
+                document.addEventListener('mousemove', (e) => this.updateCursor(e));
+                document.addEventListener('click', (e) => this.handleClick(e));
+                document.addEventListener('keydown', (e) => this.handleKeydown(e));
+            }
+
+            updateCursor(e = null) {
+                const cursor = document.getElementById('cursor');
+                if (e) {
+                    cursor.style.left = (e.clientX - 15) + 'px';
+                    cursor.style.top = (e.clientY - 15) + 'px';
+                }
+            }
+
+            startGame() {
+                this.gameState = 'playing';
+                this.score = 0;
+                this.level = 1;
+                this.consciousness = 100;
+                this.streak = 0;
+                this.reactionTimes = [];
+                this.activeTargets = [];
+                
+                document.getElementById('start-screen').classList.add('hidden');
+                document.getElementById('game-over-screen').classList.add('hidden');
+                document.getElementById('stats-panel').style.display = 'block';
+                document.getElementById('focus-indicator').style.display = 'block';
+                
+                this.updateUI();
+                this.scheduleNextTarget();
+                this.startConsciousnessDecay();
+            }
+
+            scheduleNextTarget() {
+                if (this.gameState !== 'playing') return;
+                
+                const spawnDelay = this.baseSpawnRate / this.difficultyMultiplier;
+                const variation = spawnDelay * 0.3;
+                const actualDelay = spawnDelay + (Math.random() - 0.5) * variation;
+                
+                this.spawnTimer = setTimeout(() => {
+                    this.spawnTarget();
+                    this.scheduleNextTarget();
+                }, Math.max(actualDelay, 500));
+            }
+
+            spawnTarget() {
+                const container = document.querySelector('.game-container');
+                const target = document.createElement('div');
+                
+                const targetType = this.determineTargetType();
+                target.className = `reaction-target ${targetType}`;
+                
+                const position = this.getRandomPosition();
+                target.style.left = position.x + 'px';
+                target.style.top = position.y + 'px';
+                
+                target.targetType = targetType;
+                target.spawnTime = Date.now();
+                target.clicked = false;
+                
+                target.addEventListener('click', (e) => this.hitTarget(target, e));
+                
+                container.appendChild(target);
+                this.activeTargets.push(target);
+                
+                this.createNeuralWave(position.x + 40, position.y + 40);
+                
+                setTimeout(() => {
+                    if (!target.clicked && target.parentNode) {
+                        this.missTarget(target);
+                    }
+                }, this.targetLifetime - (this.level * 100));
+            }
+
+            determineTargetType() {
+                const rand = Math.random();
+                if (rand < 0.1) return 'phantom';
+                if (rand < 0.25) return 'critical';
+                if (rand < 0.4) return 'bonus';
+                return 'normal';
+            }
+
+            getRandomPosition() {
+                const margin = 100;
+                const x = margin + Math.random() * (window.innerWidth - 2 * margin - 80);
+                const y = margin + Math.random() * (window.innerHeight - 2 * margin - 80);
+                return { x, y };
+            }
+
+            createNeuralWave(x, y) {
+                const wave = document.createElement('div');
+                wave.className = 'neural-wave';
+                wave.style.left = (x - 10) + 'px';
+                wave.style.top = (y - 10) + 'px';
+                wave.style.width = '20px';
+                wave.style.height = '20px';
+                
+                document.querySelector('.game-container').appendChild(wave);
+                
+                setTimeout(() => {
+                    if (wave.parentNode) {
+                        wave.parentNode.removeChild(wave);
+                    }
+                }, 2000);
+            }
+
+            hitTarget(target, e) {
+                e.stopPropagation();
+                if (target.clicked) return;
+                
+                target.clicked = true;
+                const reactionTime = Date.now() - target.spawnTime;
+                
+                this.processHit(target, reactionTime);
+                this.createFeedbackExplosion(target, reactionTime);
+                this.removeTarget(target);
+                this.updateDifficulty();
+                this.updateUI();
+            }
+
+            processHit(target, reactionTime) {
+                let points = 0;
+                let consciousnessBonus = 0;
+                
+                switch (target.targetType) {
+                    case 'critical':
+                        points = reactionTime < this.perfectThreshold ? 150 : 100;
+                        consciousnessBonus = 5;
+                        break;
+                    case 'bonus':
+                        points = reactionTime < this.perfectThreshold ? 80 : 50;
+                        consciousnessBonus = 3;
+                        break;
+                    case 'phantom':
+                        points = -50;
+                        consciousnessBonus = -10;
+                        this.streak = 0;
+                        break;
+                    default:
+                        points = reactionTime < this.perfectThreshold ? 30 : 20;
+                        consciousnessBonus = 1;
+                }
+                
+                if (target.targetType !== 'phantom') {
+                    this.reactionTimes.push(reactionTime);
+                    if (reactionTime < this.perfectThreshold) {
+                        this.streak++;
+                        points += Math.floor(this.streak / 5) * 10;
+                    } else {
+                        this.streak = 0;
+                    }
+                }
+                
+                this.score += Math.max(points, 0);
+                this.consciousness = Math.min(100, this.consciousness + consciousnessBonus);
+                this.maxStreak = Math.max(this.maxStreak, this.streak);
+                
+                this.updateStreakDisplay();
+            }
+
+            missTarget(target) {
+                if (target.targetType !== 'phantom') {
+                    this.consciousness -= 15;
+                    this.streak = 0;
+                }
+                this.removeTarget(target);
+                this.updateUI();
+                
+                if (this.consciousness <= 0) {
+                    this.endGame();
+                }
+            }
+
+            removeTarget(target) {
+                if (target.parentNode) {
+                    target.parentNode.removeChild(target);
+                }
+                this.activeTargets = this.activeTargets.filter(t => t !== target);
+            }
+
+            createFeedbackExplosion(target, reactionTime) {
+                const rect = target.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                const explosion = document.createElement('div');
+                explosion.className = 'feedback-explosion';
+                explosion.style.left = centerX + 'px';
+                explosion.style.top = centerY + 'px';
+                
+                const color = reactionTime < this.perfectThreshold ? '#00ff00' : '#00ffff';
+                
+                for (let i = 0; i < 12; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'feedback-particle';
+                    particle.style.background = color;
+                    
+                    const angle = (i / 12) * Math.PI * 2;
+                    const distance = 30 + Math.random() * 40;
+                    const endX = Math.cos(angle) * distance;
+                    const endY = Math.sin(angle) * distance;
+                    
+                    particle.style.transform = `translate(${endX}px, ${endY}px)`;
+                    particle.style.opacity = '0';
+                    particle.style.transition = 'all 0.6s ease-out';
+                    
+                    explosion.appendChild(particle);
+                }
+                
+                document.body.appendChild(explosion);
+                
+                setTimeout(() => {
+                    explosion.querySelectorAll('.feedback-particle').forEach(p => {
+                        p.style.opacity = '1';
+                    });
+                }, 50);
+                
+                setTimeout(() => {
+                    if (explosion.parentNode) {
+                        explosion.parentNode.removeChild(explosion);
+                    }
+                }, 600);
+            }
+
+            updateDifficulty() {
+                const newLevel = Math.floor(this.score / 500) + 1;
+                if (newLevel > this.level) {
+                    this.level = newLevel;
+                    this.difficultyMultiplier = 1 + (this.level - 1) * 0.15;
+                }
+            }
+
+            startConsciousnessDecay() {
+                const decay = setInterval(() => {
+                    if (this.gameState !== 'playing') {
+                        clearInterval(decay);
+                        return;
+                    }
+                    
+                    this.consciousness = Math.max(0, this.consciousness - 0.5);
+                    this.updateUI();
+                    
+                    if (this.consciousness <= 0) {
+                        this.endGame();
+                        clearInterval(decay);
+                    }
+                }, 1000);
+            }
+
+            updateStreakDisplay() {
+                const streakEl = document.getElementById('streak-indicator');
+                if (this.streak >= 3) {
+                    streakEl.textContent = `Perfect Streak: ${this.streak}`;
+                    streakEl.style.opacity = '1';
+                } else {
+                    streakEl.style.opacity = '0';
+                }
+            }
+
+            updateUI() {
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('level').textContent = this.level;
+                document.getElementById('consciousness').textContent = Math.round(this.consciousness) + '%';
+                
+                const avgReaction = this.reactionTimes.length > 0 
+                    ? Math.round(this.reactionTimes.reduce((a, b) => a + b, 0) / this.reactionTimes.length)
+                    : 0;
+                document.getElementById('avg-reaction').textContent = avgReaction + 'ms';
+                
+                const fillPercentage = Math.max(0, this.consciousness);
+                document.getElementById('reaction-fill').style.width = fillPercentage + '%';
+            }
+
+            endGame() {
+                this.gameState = 'gameOver';
+                clearTimeout(this.spawnTimer);
+                
+                this.activeTargets.forEach(target => this.removeTarget(target));
+                
+                document.getElementById('stats-panel').style.display = 'none';
+                document.getElementById('focus-indicator').style.display = 'none';
+                document.getElementById('streak-indicator').style.opacity = '0';
+                
+                this.showGameOverScreen();
+            }
+
+            showGameOverScreen() {
+                const avgReaction = this.reactionTimes.length > 0 
+                    ? Math.round(this.reactionTimes.reduce((a, b) => a + b, 0) / this.reactionTimes.length)
+                    : 0;
+                
+                document.getElementById('final-score').textContent = `Score: ${this.score}`;
+                
+                let analysis = `Level Reached: ${this.level}<br>`;
+                analysis += `Average Reaction: ${avgReaction}ms<br>`;
+                analysis += `Max Streak: ${this.maxStreak}<br><br>`;
+                
+                if (avgReaction < 250) {
+                    analysis += 'Neural pathways: OPTIMIZED<br>Consciousness state: TRANSCENDENT';
+                } else if (avgReaction < 400) {
+                    analysis += 'Neural efficiency: ENHANCED<br>Consciousness state: ELEVATED';
+                } else {
+                    analysis += 'Neural potential: AWAKENING<br>Consciousness state: EVOLVING';
+                }
+                
+                document.getElementById('performance-analysis').innerHTML = analysis;
+                document.getElementById('game-over-screen').classList.remove('hidden');
+            }
+
+            handleClick(e) {
+                if (this.gameState === 'playing') {
+                    this.consciousness = Math.max(0, this.consciousness - 2);
+                    this.updateUI();
+                }
+            }
+
+            handleKeydown(e) {
+                if (e.code === 'Space' && this.gameState === 'start') {
+                    e.preventDefault();
+                    this.startGame();
+                } else if (e.code === 'Escape' && this.gameState === 'playing') {
+                    this.endGame();
+                }
+            }
+        }
+
+        function startGame() {
+            if (window.game) {
+                window.game.startGame();
+            }
+        }
+
+        function restartGame() {
+            window.game = new NeuralReflexGame();
+            window.game.startGame();
+        }
+
+        window.addEventListener('load', () => {
+            window.game = new NeuralReflexGame();
+        });
+    </script>
+</body>
+</html>

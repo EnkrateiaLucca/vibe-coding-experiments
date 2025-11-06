@@ -4,52 +4,332 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modern Quiz App</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #1a202c;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #1a202c;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 2.5em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        #fileInput {
+            display: none;
+        }
+        .upload-section {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border: 2px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 40px;
+            transition: all 0.3s ease;
+        }
+        .upload-section:hover {
+            border-color: #764ba2;
+            transform: translateY(-2px);
+        }
+        .file-upload {
+            display: inline-block;
+            padding: 15px 35px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 1.05em;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .file-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        .file-upload:active {
+            transform: translateY(0);
+        }
+        button {
+            padding: 15px 35px;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 1.05em;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
+            margin-left: 15px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(72, 187, 120, 0.6);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button:disabled {
+            background: linear-gradient(135deg, #cbd5e0 0%, #a0aec0 100%);
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        #questionContainer, #resultContainer {
+            margin-top: 20px;
+        }
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .option {
+            padding: 10px;
+            background-color: #ecf0f1;
+            border: 2px solid #bdc3c7;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .option:hover {
+            background-color: #e0e6e8;
+        }
+        .option.selected {
+            background-color: #3498db;
+            border-color: #2980b9;
+            color: #fff;
+        }
+        .feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .correct {
+            background-color: #e8f8f5;
+            border: 1px solid #2ecc71;
+            color: #27ae60;
+        }
+        .incorrect {
+            background-color: #fdedeb;
+            border: 1px solid #e74c3c;
+            color: #c0392b;
+        .open-ended-answer {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            border: 2px solid #bdc3c7;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 1em;
+            resize: vertical;
+        }
+        .open-ended-answer:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        .answer-section {
+            margin-top: 20px;
+            width: 100%;
+        }
+        .answer-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .open-ended-answer {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            border: 2px solid #bdc3c7;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 1em;
+            resize: vertical;
+            margin-top: 5px;
+        }
+        .open-ended-answer:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        .example-box {
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .example-title {
+            color: #2d3748;
+            font-weight: 700;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .example-title::before {
+            content: "📋";
+            font-size: 1.3em;
+        }
+        .json-example {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: #f7fafc;
+            padding: 25px;
+            border-radius: 10px;
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.8;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .json-key {
+            color: #90cdf4;
+            font-weight: 600;
+        }
+        .json-string {
+            color: #9ae6b4;
+        }
+        .json-number {
+            color: #fc8181;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 25px;
+            }
+            h1 {
+                font-size: 2em;
+            }
+            .upload-section {
+                padding: 30px 20px;
+            }
+            .file-upload, button {
+                display: block;
+                width: 100%;
+                margin: 10px 0;
+            }
+            button {
+                margin-left: 0;
+            }
+            .json-example {
+                font-size: 0.8em;
+                padding: 20px;
+            }
+        }
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-purple-100 to-indigo-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8 max-w-2xl">
-        <h1 class="text-4xl font-bold mb-8 text-center text-indigo-800">Modern Quiz App</h1>
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <div id="upload-section" class="mb-6">
-                <label for="json-file" class="block text-sm font-medium text-gray-700 mb-2">Upload Quiz JSON</label>
-                <input type="file" id="json-file" accept=".json" class="block w-full text-sm text-gray-500
-                    file:mr-4 file:py-2 file:px-4
-                    file:rounded-full file:border-0
-                    file:text-sm file:font-semibold
-                    file:bg-indigo-50 file:text-indigo-700
-                    hover:file:bg-indigo-100
-                ">
+<body>
+    <div class="container">
+        <div id="initialPage">
+            <h1>Quiz App</h1>
+            <p class="subtitle">Test your knowledge with custom JSON-based quizzes</p>
+
+            <div class="upload-section">
+                <label for="fileInput" class="file-upload">
+                    Choose Quiz File
+                </label>
+                <input type="file" id="fileInput" accept=".json,.txt">
+                <button id="startQuiz" disabled>Start Quiz</button>
             </div>
-            <div id="quiz-content"></div>
-            <div id="results" class="hidden mt-6"></div>
-            <div class="flex justify-center space-x-4 mt-6">
-                <button id="start-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105">Start Quiz</button>
-                <button id="submit-btn" class="hidden bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105">Submit Quiz</button>
-                <button id="download-csv" class="hidden bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-6 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105">Download Results (CSV)</button>
-                <button id="export-anki" class="hidden bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105">Export as Anki Cards</button>
+
+            <div class="example-box">
+                <div class="example-title">Expected JSON File Format:</div>
+                <div class="json-example">[
+  {
+    <span class="json-key">"question"</span>: <span class="json-string">"What is the capital of France?"</span>,
+    <span class="json-key">"type"</span>: <span class="json-string">"multiple-choice"</span>,
+    <span class="json-key">"options"</span>: [
+      <span class="json-string">"London"</span>,
+      <span class="json-string">"Berlin"</span>,
+      <span class="json-string">"Paris"</span>,
+      <span class="json-string">"Madrid"</span>
+    ],
+    <span class="json-key">"correctAnswer"</span>: <span class="json-number">2</span>
+  },
+  {
+    <span class="json-key">"question"</span>: <span class="json-string">"What is 2 + 2?"</span>,
+    <span class="json-key">"type"</span>: <span class="json-string">"open-ended"</span>,
+    <span class="json-key">"acceptedAnswers"</span>: [
+      <span class="json-string">"4"</span>,
+      <span class="json-string">"four"</span>
+    ]
+  }
+]</div>
             </div>
         </div>
+
+        <div id="questionContainer" style="display: none;">
+            <h2 id="question"></h2>
+            <div class="options" id="options"></div>
+            <button id="submit" style="margin-top: 20px;">Submit</button>
+        </div>
+        <div id="resultContainer" style="display: none;">
+            <h2>Quiz Results</h2>
+            <p>Score: <span id="score"></span></p>
+            <div id="feedback"></div>
+         <div style="display: flex; gap: 1-px; margin-top: 20px;">
+            <button id="downloadCSV" style="margin-top: 20px;">Download Results (CSV)</button>
+        </div>
+        <button id="exportToAnki" style="margin-top: 20px; background-color: #3c47e7; border-color: #c0392b;">Export to Anki</button>
     </div>
 
     <script>
-        const quizContent = document.getElementById('quiz-content');
-        const resultsDiv = document.getElementById('results');
-        const startBtn = document.getElementById('start-btn');
-        const submitBtn = document.getElementById('submit-btn');
-        const downloadCsvBtn = document.getElementById('download-csv');
-        const jsonFileInput = document.getElementById('json-file');
-        const exportAnkiBtn = document.getElementById('export-anki');
+        let questions = [];
+        let currentQuestion = 0;
+        let score = 0;
+        let results = [];
 
-        let quiz = [];
-        let userAnswers = [];
+        const fileInput = document.getElementById('fileInput');
+        const startQuiz = document.getElementById('startQuiz');
+        const initialPage = document.getElementById('initialPage');
+        const questionContainer = document.getElementById('questionContainer');
+        const questionElement = document.getElementById('question');
+        const optionsElement = document.getElementById('options');
+        const submitButton = document.getElementById('submit');
+        const resultContainer = document.getElementById('resultContainer');
+        const scoreElement = document.getElementById('score');
+        const feedbackElement = document.getElementById('feedback');
+        const downloadCSV = document.getElementById('downloadCSV');
 
-        jsonFileInput.addEventListener('change', handleFileUpload);
+        fileInput.addEventListener('change', handleFileUpload);
+        startQuiz.addEventListener('click', startQuizHandler);
+        submitButton.addEventListener('click', submitAnswer);
+        downloadCSV.addEventListener('click', downloadResults);
 
         function handleFileUpload(event) {
             const file = event.target.files[0];
@@ -57,146 +337,159 @@
 
             reader.onload = function(e) {
                 try {
-                    const jsonData = JSON.parse(e.target.result);
-                    quiz = jsonData.questions;
-                    startBtn.disabled = false;
-                    startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    startBtn.classList.add('hover:bg-indigo-700');
+                    questions = JSON.parse(e.target.result);
+                    startQuiz.disabled = false;
                 } catch (error) {
-                    alert('Error parsing JSON file. Please make sure it\'s a valid JSON format.');
+                    alert('Error parsing file. Please ensure it\'s a valid JSON.');
                 }
             };
 
             reader.readAsText(file);
         }
 
-        function loadQuiz() {
-            if (quiz.length === 0) {
-                alert('Please upload a valid JSON file before starting the quiz.');
-                return;
-            }
-            displayQuestion(0);
-            startBtn.classList.add('hidden');
-            submitBtn.classList.remove('hidden');
-            document.getElementById('upload-section').classList.add('hidden');
+        function startQuizHandler() {
+            currentQuestion = 0;
+            score = 0;
+            results = [];
+            initialPage.style.display = 'none';
+            questionContainer.style.display = 'block';
+            resultContainer.style.display = 'none';
+            displayQuestion();
         }
 
-        function displayQuestion(index) {
-            if (index >= quiz.length) {
-                submitQuiz();
-                return;
+        function displayQuestion() {
+            const question = questions[currentQuestion];
+            questionElement.textContent = `Question ${currentQuestion + 1}: ${question.question}`;
+            optionsElement.innerHTML = '';
+
+            if (question.type === 'multiple-choice') {
+                // Display multiple choice options
+                question.options.forEach((option, index) => {
+                    const button = document.createElement('div');
+                    button.className = 'option';
+                    button.textContent = option;
+                    button.addEventListener('click', () => selectOption(button));
+                    optionsElement.appendChild(button);
+                });
+            } else if (question.type === 'open-ended') {
+                // Create answer section container
+                const answerSection = document.createElement('div');
+                answerSection.className = 'answer-section';
+                
+                // Add label for clarity
+                const label = document.createElement('label');
+                label.textContent = 'Your Answer:';
+                label.className = 'answer-label';
+                
+                // Create textarea for answer
+                const textArea = document.createElement('textarea');
+                textArea.className = 'open-ended-answer';
+                textArea.placeholder = 'Type your answer here...';
+                
+                // Append elements
+                answerSection.appendChild(label);
+                answerSection.appendChild(textArea);
+                optionsElement.appendChild(answerSection);
+            }
+        }
+
+        function selectOption(selectedOption) {
+            const options = optionsElement.getElementsByClassName('option');
+            for (let option of options) {
+                option.classList.remove('selected');
+            }
+            selectedOption.classList.add('selected');
+        }
+
+        function submitAnswer() {
+            const question = questions[currentQuestion];
+            let isCorrect = false;
+            let userAnswer = '';
+            let correctAnswer = '';
+
+            if (question.type === 'multiple-choice') {
+                const selectedOption = optionsElement.querySelector('.option.selected');
+                if (!selectedOption) {
+                    alert('Please select an answer');
+                    return;
+                }
+                const selectedAnswer = Array.from(optionsElement.children).indexOf(selectedOption);
+                isCorrect = selectedAnswer === question.correctAnswer;
+                userAnswer = question.options[selectedAnswer];
+                correctAnswer = question.options[question.correctAnswer];
+            } else if (question.type === 'open-ended') {
+                const textArea = optionsElement.querySelector('.open-ended-answer');
+                if (!textArea || !textArea.value.trim()) {
+                    alert('Please enter an answer');
+                    return;
+                }
+                userAnswer = textArea.value.trim();
+                isCorrect = question.acceptedAnswers.some(answer => 
+                    userAnswer.toLowerCase() === answer.toLowerCase()
+                );
+                correctAnswer = question.acceptedAnswers.join(' OR ');
             }
 
-            const question = quiz[index];
-            let html = `
-                <div class="mb-6">
-                    <h2 class="text-xl font-semibold mb-4 text-indigo-800">Question ${index + 1}: ${question.question}</h2>
-                    <div class="space-y-3">
-            `;
+            if (isCorrect) score++;
 
-            question.options.forEach((option, i) => {
-                html += `
-                    <div class="flex items-center">
-                        <input type="radio" id="q${index}_${i}" name="q${index}" value="${option}" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
-                        <label for="q${index}_${i}" class="ml-3 block text-sm font-medium text-gray-700">${option}</label>
-                    </div>
-                `;
+            results.push({
+                question: question.question,
+                userAnswer: userAnswer,
+                correctAnswer: correctAnswer,
+                isCorrect: isCorrect
             });
 
-            html += `
-                    </div>
-                </div>
-                <button onclick="nextQuestion(${index})" class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105">Next</button>
-            `;
+            currentQuestion++;
 
-            quizContent.innerHTML = html;
-        }
-
-        function nextQuestion(currentIndex) {
-            const selectedOption = document.querySelector(`input[name="q${currentIndex}"]:checked`);
-            if (selectedOption) {
-                userAnswers[currentIndex] = selectedOption.value;
-                displayQuestion(currentIndex + 1);
+            if (currentQuestion < questions.length) {
+                displayQuestion();
             } else {
-                alert("Please select an answer before proceeding.");
+                showResults();
             }
         }
 
-        function submitQuiz() {
-            let score = 0;
-            let resultsHtml = "<h2 class='text-2xl font-bold mb-6 text-indigo-800'>Quiz Results</h2>";
+        function showResults() {
+            questionContainer.style.display = 'none';
+            resultContainer.style.display = 'block';
+            scoreElement.textContent = `${score} / ${questions.length}`;
 
-            quiz.forEach((question, index) => {
-                const userAnswer = userAnswers[index];
-                const isCorrect = userAnswer === question.answer;
-                if (isCorrect) score++;
-
-                resultsHtml += `
-                    <div class="mb-6 p-4 rounded-lg ${isCorrect ? 'bg-green-100' : 'bg-red-100'}">
-                        <p class="font-semibold ${isCorrect ? 'text-green-800' : 'text-red-800'}">Question ${index + 1}: ${question.question}</p>
-                        <p class="mt-2">Your answer: ${userAnswer}</p>
-                        <p class="font-medium">Correct answer: ${question.answer}</p>
-                        <p class="mt-2 text-sm italic">${question.explanation}</p>
-                    </div>
-                `;
-            });
-
-            resultsHtml += `<p class="text-xl font-bold mt-6 text-indigo-800">Your score: ${score} out of ${quiz.length}</p>`;
-
-            quizContent.innerHTML = "";
-            resultsDiv.innerHTML = resultsHtml;
-            resultsDiv.classList.remove('hidden');
-            submitBtn.classList.add('hidden');
-            downloadCsvBtn.classList.remove('hidden');
-            exportAnkiBtn.classList.remove('hidden');
+            feedbackElement.innerHTML = results.map((result, index) => `
+                <div class="feedback ${result.isCorrect ? 'correct' : 'incorrect'}">
+                    <p><strong>Question ${index + 1}:</strong> ${result.question}</p>
+                    <p>Your answer: ${result.userAnswer}</p>
+                    <p>Correct answer: ${result.correctAnswer}</p>
+                </div>
+            `).join('');
         }
 
-        function downloadCSV() {
-            let csvContent = "Question,Your Answer,Correct Answer,Result\n";
+        function downloadResults() {
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + "Question,Your Answer,Correct Answer,Result\n"
+                + results.map(r => `"${r.question}","${r.userAnswer}","${r.correctAnswer}",${r.isCorrect ? "Correct" : "Incorrect"}`).join("\n");
 
-            quiz.forEach((question, index) => {
-                const userAnswer = userAnswers[index];
-                const isCorrect = userAnswer === question.answer;
-                csvContent += `"${question.question}","${userAnswer}","${question.answer}","${isCorrect ? 'Correct' : 'Incorrect'}"\n`;
-            });
-
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
-            if (link.download !== undefined) {
-                const url = URL.createObjectURL(blob);
-                link.setAttribute("href", url);
-                link.setAttribute("download", "quiz_results.csv");
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "quiz_results.csv");
+            document.body.appendChild(link);
+            link.click();
         }
+        // Add the new event listener with the other listeners
+        const exportAnki = document.getElementById('exportToAnki');
+        exportAnki.addEventListener('click', downloadAnkiFormat);
 
-        function exportAnkiCards() {
-            let ankiContent = "";
+        // Add this new function before the closing script tag
+        function downloadAnkiFormat() {
+            const ankiContent = "data:text/plain;charset=utf-8,"
+                + results.map(r => `${r.question}; ${r.correctAnswer}`).join("\n");
 
-            quiz.forEach((question) => {
-                ankiContent += `${question.question}; ${question.answer}\n`;
-            });
-
-            const blob = new Blob([ankiContent], { type: 'text/plain;charset=utf-8;' });
+            const encodedUri = encodeURI(ankiContent);
             const link = document.createElement("a");
-            if (link.download !== undefined) {
-                const url = URL.createObjectURL(blob);
-                link.setAttribute("href", url);
-                link.setAttribute("download", "anki_cards.txt");
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "anki_cards.txt");
+            document.body.appendChild(link);
+            link.click();
         }
-
-        startBtn.addEventListener('click', loadQuiz);
-        submitBtn.addEventListener('click', submitQuiz);
-        downloadCsvBtn.addEventListener('click', downloadCSV);
-        exportAnkiBtn.addEventListener('click', exportAnkiCards);
     </script>
 </body>
 </html>
